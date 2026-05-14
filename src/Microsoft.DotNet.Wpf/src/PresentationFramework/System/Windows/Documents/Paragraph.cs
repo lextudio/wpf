@@ -16,7 +16,7 @@ namespace System.Windows.Documents
     /// Paragraph element 
     /// </summary>
     [ContentProperty("Inlines")]
-    public class Paragraph : Block
+    public partial class Paragraph : Block
     {
         //-------------------------------------------------------------------
         //
@@ -71,7 +71,11 @@ namespace System.Windows.Documents
         {
             get
             {
+#if HAS_UNO
+                return _inlines ??= new InlineCollection(this, /*isOwnerParent*/true);
+#else
                 return new InlineCollection(this, /*isOwnerParent*/true);
+#endif
             }
         }
 
@@ -225,7 +229,7 @@ namespace System.Windows.Documents
             double lineHeight = this.LineHeight;
             if (IsLineHeightAuto(lineHeight))
             {
-                lineHeight = this.FontFamily.LineSpacing * this.FontSize;
+                lineHeight = 1.0 * this.FontSize;
             }
             margin = new Thickness(0, lineHeight, 0, lineHeight);
         }

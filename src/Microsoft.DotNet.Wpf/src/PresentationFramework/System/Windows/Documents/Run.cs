@@ -16,7 +16,7 @@ namespace System.Windows.Documents
     /// A terminal element in text flow hierarchy - contains a uniformatted run of unicode characters
     /// </summary>
     [ContentProperty("Text")]
-    public class Run : Inline
+    public partial class Run : Inline
     {
         //-------------------------------------------------------------------
         //
@@ -66,6 +66,9 @@ namespace System.Windows.Documents
                     // No need to duplicate the string data in TextProperty here. TextContainer will
                     // set the property to a deferred reference.
                     this.ContentStart.InsertTextInRun(text);
+#if HAS_UNO
+                    Text = text;
+#endif
                 }
             }
             finally

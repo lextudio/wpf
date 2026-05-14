@@ -13,7 +13,7 @@ namespace System.Windows.Documents
     /// Inline element.
     /// </summary>
     [TextElementEditingBehaviorAttribute(IsMergeable = true, IsTypographicOnly = true)]
-    public abstract class Inline : TextElement
+    public abstract partial class Inline : TextElement
     {
         //-------------------------------------------------------------------
         //

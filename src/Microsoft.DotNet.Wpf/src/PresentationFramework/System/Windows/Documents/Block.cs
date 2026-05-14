@@ -11,6 +11,7 @@ using System.ComponentModel;    // TypeConverter
 using System.Windows.Media;     // Brush
 using MS.Internal.Text;         // Text DPI restrictions
 using MS.Internal.PtsHost.UnsafeNativeMethods; // PTS restrictions
+using Brush = System.Windows.Media.Brush;
 
 namespace System.Windows.Documents
 {
@@ -20,7 +21,7 @@ namespace System.Windows.Documents
     /// Only Blocks are allowed on top level of FlowDocument
     /// and other structural text elements like Section, ListItem, TableCell.
     /// </summary>
-    public abstract class Block : TextElement
+    public abstract partial class Block : TextElement
     {
         //-------------------------------------------------------------------
         //

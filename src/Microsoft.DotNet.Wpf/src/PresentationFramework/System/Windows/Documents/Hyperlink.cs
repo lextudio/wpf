@@ -24,7 +24,7 @@ namespace System.Windows.Documents
     /// Implements a Hyperlink element
     /// </summary>
     [TextElementEditingBehaviorAttribute(IsMergeable = false, IsTypographicOnly = false)]
-    public class Hyperlink : Span, ICommandSource, IUriContext
+    public partial class Hyperlink : Span, ICommandSource, IUriContext
     {
         //--------------------------------------------------------------------
         //

@@ -15,7 +15,7 @@ namespace System.Windows.Documents
     /// Span element used for grouping other Inline elements.
     /// </summary>
     [ContentProperty("Inlines")]
-    public class Span : Inline
+    public partial class Span : Inline
     {
         //-------------------------------------------------------------------
         //
@@ -169,7 +169,11 @@ namespace System.Windows.Documents
         {
             get
             {
+#if HAS_UNO
+                return _inlines ??= new InlineCollection(this, /*isOwnerParent*/true);
+#else
                 return new InlineCollection(this, /*isOwnerParent*/true);
+#endif
             }
         }
 
