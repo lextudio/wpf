@@ -14,7 +14,7 @@ namespace System.Windows.Documents
     /// Section element. It is an element which can contain a sequence of Block elements.
     /// </summary>
     [ContentProperty("Blocks")]
-    public class Section : Block
+    public partial class Section : Block
     {
         //-------------------------------------------------------------------
         //
@@ -91,7 +91,11 @@ namespace System.Windows.Documents
         {
             get
             {
+#if HAS_UNO
+                return _blocks ??= new BlockCollection(this, /*isOwnerParent*/true);
+#else
                 return new BlockCollection(this, /*isOwnerParent*/true);
+#endif
             }
         }
 

@@ -17,7 +17,7 @@ namespace System.Windows.Documents
     /// </summary>
     [ContentProperty("Child")]
     [TextElementEditingBehaviorAttribute(IsMergeable = false)]
-    public class InlineUIContainer : Inline
+    public partial class InlineUIContainer : Inline
     {
         //-------------------------------------------------------------------
         //
@@ -92,11 +92,27 @@ namespace System.Windows.Documents
         {
             get
             {
+#if HAS_UNO
+                return _child;
+#else
                 return this.ContentStart.GetAdjacentElement(LogicalDirection.Forward) as UIElement;
+#endif
             }
 
             set
             {
+#if HAS_UNO
+                if (_child != null)
+                {
+                    ContainerTextElementField.ClearValue(_child);
+                }
+
+                _child = value;
+                if (_child != null)
+                {
+                    ContainerTextElementField.SetValue(_child, this);
+                }
+#else
                 TextContainer textContainer = this.TextContainer;
 
                 textContainer.BeginChange();
@@ -121,6 +137,7 @@ namespace System.Windows.Documents
                 {
                     textContainer.EndChange();
                 }
+#endif
             }
         }
 
@@ -136,9 +153,13 @@ namespace System.Windows.Documents
         {
             get
             {
+#if HAS_UNO
+                throw new NotSupportedException("UIElementIsland requires the WPF text layout host and is not available in UnoRichText yet.");
+#else
                 UpdateUIElementIsland();
 
                 return _uiElementIsland;
+#endif
             }
         }
 
@@ -172,6 +193,9 @@ namespace System.Windows.Documents
         #region Private Data
 
         private UIElementIsland _uiElementIsland;
+#if HAS_UNO
+        private UIElement? _child;
+#endif
 
         #endregion Private Data
     }

@@ -10,6 +10,7 @@
 using System.Windows.Markup; // ContentProperty
 using System.ComponentModel;        // TypeConverter
 using System.Windows.Media;         // Brush
+using Brush = System.Windows.Media.Brush;
 
 namespace System.Windows.Documents
 {
@@ -19,7 +20,7 @@ namespace System.Windows.Documents
     /// numbering.
     /// </summary>
     [ContentProperty("Blocks")]
-    public class ListItem : TextElement
+    public partial class ListItem : TextElement
     {
         //-------------------------------------------------------------------
         //
@@ -85,7 +86,11 @@ namespace System.Windows.Documents
         {
             get
             {
+#if HAS_UNO
+                return _blocks ??= new BlockCollection(this, /*isOwnerParent*/true);
+#else
                 return  new BlockCollection(this, /*isOwnerParent*/true);
+#endif
             }
         }
 

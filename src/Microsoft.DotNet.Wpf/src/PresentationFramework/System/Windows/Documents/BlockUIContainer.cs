@@ -15,7 +15,7 @@ namespace System.Windows.Documents
     /// flow content block collections
     /// </summary>
     [ContentProperty("Child")]
-    public class BlockUIContainer : Block
+    public partial class BlockUIContainer : Block
     {
         //-------------------------------------------------------------------
         //
@@ -68,11 +68,27 @@ namespace System.Windows.Documents
         {
             get
             {
+#if HAS_UNO
+                return _child;
+#else
                 return this.ContentStart.GetAdjacentElement(LogicalDirection.Forward) as UIElement;
+#endif
             }
 
             set
             {
+#if HAS_UNO
+                if (_child != null)
+                {
+                    ContainerTextElementField.ClearValue(_child);
+                }
+
+                _child = value;
+                if (_child != null)
+                {
+                    ContainerTextElementField.SetValue(_child, this);
+                }
+#else
                 TextContainer textContainer = this.TextContainer;
 
                 textContainer.BeginChange();
@@ -97,9 +113,14 @@ namespace System.Windows.Documents
                 {
                     textContainer.EndChange();
                 }
+#endif
             }
         }
 
         #endregion
+
+#if HAS_UNO
+        private UIElement? _child;
+#endif
     }
 }
