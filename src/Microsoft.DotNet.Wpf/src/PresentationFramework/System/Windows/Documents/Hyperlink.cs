@@ -19,8 +19,8 @@ using System.Windows.Threading;
 using CommonDependencyProperty = MS.Internal.PresentationFramework.CommonDependencyPropertyAttribute;
 #if HAS_UNO
 using Debug = System.Diagnostics.Debug;
-using Path = System.Windows.Shapes.Path;
 #endif
+using Path = System.IO.Path;
 
 namespace System.Windows.Documents
 {

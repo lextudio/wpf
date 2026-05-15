@@ -18,7 +18,7 @@ namespace MS.Internal.Documents
     /// ContentElementCollection provides public access for TItems
     /// reading and manipulating.
     /// </remarks>
-    internal abstract class ContentElementCollection<TParent, TItem> : IList<TItem>, IList
+    internal abstract partial class ContentElementCollection<TParent, TItem> : IList<TItem>, IList
         where TParent : TextElement, IAcceptInsertion
         where TItem : FrameworkContentElement, IIndexedChild<TParent>
     {
@@ -385,7 +385,7 @@ namespace MS.Internal.Documents
             private object _currentElement;
         }
 
-        protected class DummyProxy : DependencyObject
+        protected partial class DummyProxy : DependencyObject
         {
         }
 
