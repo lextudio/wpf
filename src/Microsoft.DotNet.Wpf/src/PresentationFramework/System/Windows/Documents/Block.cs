@@ -11,7 +11,9 @@ using System.ComponentModel;    // TypeConverter
 using System.Windows.Media;     // Brush
 using MS.Internal.Text;         // Text DPI restrictions
 using MS.Internal.PtsHost.UnsafeNativeMethods; // PTS restrictions
+#if !HAS_UNO
 using Brush = System.Windows.Media.Brush;
+#endif
 
 namespace System.Windows.Documents
 {

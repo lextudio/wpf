@@ -10,7 +10,9 @@
 using System.Windows.Markup; // ContentProperty
 using System.ComponentModel;        // TypeConverter
 using System.Windows.Media;         // Brush
+#if !HAS_UNO
 using Brush = System.Windows.Media.Brush;
+#endif
 
 namespace System.Windows.Documents
 {
