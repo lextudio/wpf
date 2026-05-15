@@ -17,6 +17,10 @@ using MS.Internal.AppModel;
 using System.Windows.Threading;
 
 using CommonDependencyProperty = MS.Internal.PresentationFramework.CommonDependencyPropertyAttribute;
+#if HAS_UNO
+using Debug = System.Diagnostics.Debug;
+using Path = System.Windows.Shapes.Path;
+#endif
 
 namespace System.Windows.Documents
 {
@@ -228,8 +232,12 @@ namespace System.Windows.Documents
         {
             get
             {
+#if HAS_UNO
+                return false;
+#else
                 return (this.TextContainer.TextSelection != null &&
                         !this.TextContainer.TextSelection.TextEditor.IsReadOnly);
+#endif
             }
         }
 
@@ -345,6 +353,9 @@ namespace System.Windows.Documents
         /// <returns>Coerced value.</returns>
         internal static object CoerceNavigateUri(DependencyObject d, object value)
         {
+#if HAS_UNO
+            return value;
+#else
             //
             // If the element for which NavigateUri is being changed is the protected element,
             // we don't let the update go through. This cancels NavigateUri modifications in
@@ -365,6 +376,7 @@ namespace System.Windows.Documents
             }
 
             return value;
+#endif
         }
 
         /// <summary>
@@ -453,7 +465,16 @@ namespace System.Windows.Documents
         /// <summary>
         /// Event correspond to left mouse button click
         /// </summary>
-        public static readonly RoutedEvent ClickEvent = System.Windows.Controls.Primitives.ButtonBase.ClickEvent.AddOwner(typeof(Hyperlink));
+        public static readonly RoutedEvent ClickEvent =
+#if HAS_UNO
+            EventManager.RegisterRoutedEvent(
+                "Click",
+                RoutingStrategy.Bubble,
+                typeof(RoutedEventHandler),
+                typeof(Hyperlink));
+#else
+            System.Windows.Controls.Primitives.ButtonBase.ClickEvent.AddOwner(typeof(Hyperlink));
+#endif
 
         /// <summary>
         /// Add / Remove ClickEvent handler
@@ -869,6 +890,13 @@ namespace System.Windows.Documents
 
         internal static void OnNavigateUriChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
+#if HAS_UNO
+            // Uno currently only supports Hyperlink's own navigation path.
+            // WPF's pseudo-hyperlink support for Path/Canvas/Glyphs/FixedPage can
+            // come later once we have a compatible routed-input surface.
+            _ = d;
+            _ = e;
+#else
             IInputElement element = d as IInputElement;
 
             //
@@ -904,10 +932,14 @@ namespace System.Windows.Documents
                     }
                 }
             }
+#endif
         }
 
         private static void SetUpNavigationEventHandlers(IInputElement element)
         {
+#if HAS_UNO
+            _ = element;
+#else
             //
             // We only support FixedPage.NavigateUri to be attached to those four elements (aka pseudo-hyperlinks):
             // Path, Canvas, Glyph, FixedPage.
@@ -929,6 +961,7 @@ namespace System.Windows.Documents
 
             SetUpEventHandler(element, UIElement.MouseEnterEvent, new MouseEventHandler(OnMouseEnter)); //set status bar
             SetUpEventHandler(element, UIElement.MouseLeaveEvent, new MouseEventHandler(OnMouseLeave)); //clear status bar
+#endif
         }
 
         private static void SetUpEventHandler(IInputElement element, RoutedEvent routedEvent, Delegate handler)
