@@ -1269,7 +1269,11 @@ namespace System.Windows.Documents
                     // This property goes to springload formatting. We should not create undo unit for it.
                     if (_springloadFormatting == null)
                     {
+#if WINUI_BRIDGE
+                        _springloadFormatting = new FormattingDependencyObject();
+#else
                         _springloadFormatting = new DependencyObject();
+#endif
                     }
 
                     _springloadFormatting.SetValue(formattingProperty, value);
@@ -1450,7 +1454,11 @@ namespace System.Windows.Documents
         private void SpringloadCurrentFormatting(DependencyObject parent)
         {
             // Create new bag for formatting properties
+#if WINUI_BRIDGE
+            _springloadFormatting = new FormattingDependencyObject();
+#else
             _springloadFormatting = new DependencyObject();
+#endif
 
             // Check if we have an object to read from
             if (parent == null)
