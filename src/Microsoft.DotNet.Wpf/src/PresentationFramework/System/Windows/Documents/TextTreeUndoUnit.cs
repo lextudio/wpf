@@ -171,8 +171,11 @@ namespace System.Windows.Documents
             DependencyObject obj;
             int i;
 
+#if HAS_UNO
+            obj = new FormattingDependencyObject();
+#else
             obj = new DependencyObject();
-
+#endif
             for (i = 0; i < records.Length; i++)
             {
                 obj.SetValue(records[i].Property, records[i].Value);

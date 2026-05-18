@@ -365,9 +365,15 @@ namespace System.Windows.Documents
                 {
                     try
                     {
+#if HAS_UNO
+                        embeddedObject = (DependencyObject)XamlReader.Load(new XmlTextReader(new StringReader(_xml)), false);
+                    }
+                    catch (Exception e)
+#else
                         embeddedObject = (DependencyObject)XamlReader.Load(new XmlTextReader(new StringReader(_xml)));
                     }
-                    catch (XamlParseException e)
+                    catch (XamlParseException e)  
+#endif
                     {
                         Invariant.Assert(e != null); // Placed here for debugging convenience - to be able to see the exception.
                     }

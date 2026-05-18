@@ -2546,8 +2546,12 @@ namespace System.Windows.Documents
             element = this.Parent as TextElement;
             if (element == null)
             {
+#if HAS_UNO
                 //  Look into adding an empty ctor to LocalValueEnumerator.
+                return new LocalValueEnumerator();
+#else
                 return (new DependencyObject()).GetLocalValueEnumerator();
+#endif
             }
 
             return element.GetLocalValueEnumerator();

@@ -103,7 +103,7 @@ namespace System.Windows.Documents
     //
     // TextPositions and TextNavigators are implemented in the TextPointer
     // and TextTreeNavigators classes respectively.
-    internal class TextContainer : ITextContainer
+    internal partial class TextContainer : ITextContainer
     {
         //------------------------------------------------------
         //
