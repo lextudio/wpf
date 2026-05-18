@@ -23,7 +23,7 @@ namespace System.Windows.Documents
     /// </summary>
     /// <remarks>
     /// </remarks>
-    public abstract class TextElement : FrameworkContentElement, IAddChild
+    public abstract partial class TextElement : FrameworkContentElement, IAddChild
     {
         //------------------------------------------------------
         //
@@ -271,7 +271,9 @@ namespace System.Windows.Documents
 
         #region Public Properties
 
+#if !HAS_UNO
         internal static readonly UncommonField<TextElement> ContainerTextElementField = new UncommonField<TextElement>();
+#endif
 
         /// <summary>
         /// A TextRange spanning the content of this element.
@@ -774,6 +776,7 @@ namespace System.Windows.Documents
 
         #region IAddChild
 
+#if !HAS_UNO
         ///<summary>
         /// Called to add the object as a child.
         ///</summary>
@@ -888,6 +891,7 @@ namespace System.Windows.Documents
             }
         }
 
+#endif // !HAS_UNO
         #endregion IAddChild
 
         #region LogicalTree
@@ -895,6 +899,7 @@ namespace System.Windows.Documents
         /// <summary>
         /// Returns enumerator to logical children.
         /// </summary>
+#if !HAS_UNO
         protected internal override IEnumerator LogicalChildren
         {
             get
@@ -904,6 +909,7 @@ namespace System.Windows.Documents
                     : new RangeContentEnumerator(this.ContentStart, this.ContentEnd);
             }
         }
+#endif
 
         #endregion LogicalTree
 
@@ -921,6 +927,7 @@ namespace System.Windows.Documents
         /// Notification that a specified property has been invalidated
         /// </summary>
         /// <param name="e">EventArgs that contains the property, metadata, old value, and new value for this change</param>
+#if !HAS_UNO
         protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
         {
             // Always call base.OnPropertyChanged, otherwise Property Engine will not work.
@@ -967,6 +974,7 @@ namespace System.Windows.Documents
                 }
             }
         }
+#endif
 
         // Notify our TextContainer that a typographic property has changed
         // value on this TextElement.
@@ -1082,6 +1090,7 @@ namespace System.Windows.Documents
         // Recursively calls EndInit for this element and for all its descendants
         internal void DeepEndInit()
         {
+#if !HAS_UNO
             if (!this.IsInitialized)
             {
                 if (!this.IsEmpty)
@@ -1101,6 +1110,7 @@ namespace System.Windows.Documents
                 this.EndInit();
                 Invariant.Assert(this.IsInitialized);
             }
+#endif
         }
 
         // Returns the common TextElement ancestor of two TextElements.
