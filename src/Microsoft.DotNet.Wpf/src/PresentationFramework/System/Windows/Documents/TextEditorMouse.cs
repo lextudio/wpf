@@ -753,6 +753,9 @@ namespace System.Windows.Documents
         // Note that the passed point must be relative to the UiScope.
         private static bool IsPointWithinRenderScope(TextEditor textEditor, Point point)
         {
+#if HAS_UNO
+            return true;
+#else
             DependencyObject textContainerOwner = textEditor.TextContainer.Parent;
             UIElement renderScope = textEditor.TextView.RenderScope;
             CaretElement caretElement = textEditor.Selection.CaretElement;
@@ -802,6 +805,7 @@ namespace System.Windows.Documents
             }
 
             return false;
+#endif
         }
 
         #endregion Private methods

@@ -285,7 +285,11 @@ namespace System.Windows.Documents
                 element = visual as FrameworkElement;
                 if (element != null)
                 {
+#if HAS_UNO
+                    GeneralTransform transform = element.TransformToDescendant(This.UiScope);
+#else
                     GeneralTransform transform = visual.TransformToDescendant(This.UiScope);
+#endif
                     if (transform != null)
                     {
                         ClipToElement(element, transform, ref horizontalOffset, ref verticalOffset);
@@ -293,6 +297,7 @@ namespace System.Windows.Documents
                 }
             }
 
+#if !HAS_UNO
             // Clip to the window client rect.
             PresentationSource source = PresentationSource.CriticalFromVisual(This.UiScope);
             IWin32Window window = source as IWin32Window;
@@ -326,6 +331,7 @@ namespace System.Windows.Documents
 
                 // ContextMenu code takes care of clipping to desktop.
             }
+#endif
         }
 
         // Clips a Point to the ActualWidth/Height of a containing FrameworkElement.
@@ -335,8 +341,11 @@ namespace System.Windows.Documents
             Point minPoint;
             Point maxPoint;
 
+#if !HAS_UNO
             Geometry clip = VisualTreeHelper.GetClip(element);
-
+#else
+            Geometry clip = null;
+#endif
             if (clip != null)
             {
                 Rect bounds = clip.Bounds;
@@ -419,6 +428,7 @@ namespace System.Windows.Documents
         {
             public EditorContextMenu() : base()
             {
+#if !HAS_UNO
                 if(ThemeManager.IsFluentThemeEnabled)
                 {
                     SetResourceReference(StyleProperty, typeof(ContextMenu));
@@ -427,6 +437,7 @@ namespace System.Windows.Documents
                 {
                     // Default to previous behavior where we did nothing.
                 }
+#endif
             }
 
             // Initialize the context menu.
@@ -545,6 +556,9 @@ namespace System.Windows.Documents
             // Returns false if no items are added.
             private bool AddReconversionItems(TextEditor textEditor)
             {
+#if HAS_UNO
+                return false;
+#else
                 MenuItem menuItem;
                 TextStore textStore = textEditor.TextStore;
 
@@ -602,6 +616,7 @@ namespace System.Windows.Documents
                 }
 
                 return (count > 0) ? true : false;
+#endif
             }
 
             // Appends clipboard related items.
@@ -639,10 +654,12 @@ namespace System.Windows.Documents
 
             private void DelayReleaseCandidateList()
             {
+#if !HAS_UNO
                 if (CandidateList != null)
                 {
                     Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.Background, new DispatcherOperationCallback(ReleaseCandidateList), null);
                 }
+#endif
             }
 
 
@@ -700,7 +717,9 @@ namespace System.Windows.Documents
 
                 try
                 {
+#if !HAS_UNO
                     _menu.CandidateList.SetResult(_index, UnsafeNativeMethods.TfCandidateResult.CAND_FINALIZED);
+#endif
                 }
                 catch (COMException)
                 {
