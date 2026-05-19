@@ -1594,6 +1594,9 @@ namespace System.Windows.Documents
             {
                 return false;
             }
+#if !HAS_UNO
+            // On HAS_UNO, TextDocumentView is never the active ITextView, so the
+            // is-check above always returns false before reaching this cast.
             MS.Internal.Documents.TextDocumentView textDocView = (MS.Internal.Documents.TextDocumentView)textView;
             MS.Internal.PtsHost.CellInfo cellInfo = textDocView.GetCellInfoFromPoint(point, null);
 
@@ -1649,6 +1652,8 @@ namespace System.Windows.Documents
             columnWidths = cellInfo.TableColumnWidths;
 
             return true;
+#endif // !HAS_UNO
+            return false;
         }
 
         // returns a column resize info class - information about table column resizing.

@@ -123,20 +123,22 @@ namespace System.Windows.Documents
 
             //If this we're searching on a Fixed layout, we need to do a faster search that takes into accout
             //page-per-stream scenarios
+#if !HAS_UNO
             if (findContainerStartPosition is DocumentSequenceTextPointer ||
                 findContainerStartPosition is FixedTextPointer)
             {
-                return FixedFindEngine.Find(findContainerStartPosition, 
+                return FixedFindEngine.Find(findContainerStartPosition,
                                             findContainerEndPosition,
                                             findPattern,
                                             cultureInfo,
-                                            matchCase, 
+                                            matchCase,
                                             matchWholeWord,
                                             matchLast,
                                             matchDiacritics,
                                             matchKashida,
                                             matchAlefHamza);
             }
+#endif // !HAS_UNO
             
             // Find the text with the specified option flags.
             findResult = InternalFind(

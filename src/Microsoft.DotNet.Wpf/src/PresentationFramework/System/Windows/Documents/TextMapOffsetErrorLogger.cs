@@ -12,9 +12,10 @@
 using System.Collections;
 using System.Diagnostics.Tracing;
 
+#if !HAS_UNO
 namespace System.Windows.Documents
 {
-    // The main definition for Speller is found in Speller.cs. 
+    // The main definition for Speller is found in Speller.cs.
     // This file holds only the definition for TextMapOffsetErrorLogger.
     internal partial class Speller
     {
@@ -231,3 +232,4 @@ namespace System.Windows.Documents
         }
     }
 }
+#endif // !HAS_UNO
