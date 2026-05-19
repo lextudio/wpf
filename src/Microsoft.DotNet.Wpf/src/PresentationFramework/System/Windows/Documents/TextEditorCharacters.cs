@@ -223,8 +223,13 @@ namespace System.Windows.Documents
             }
             else if (!textDecorations.TryRemove(TextDecorations.Underline, out toggledTextDecorations))
             {
-                // TextDecorations.Underline was not present, so add it 
+                // TextDecorations.Underline was not present, so add it
+#if HAS_UNO
+                foreach (var dec in TextDecorations.Underline)
+                    toggledTextDecorations.Add(dec);
+#else
                 toggledTextDecorations.Add(TextDecorations.Underline);
+#endif
             }
 
             TextEditorCharacters._OnApplyProperty(This, Inline.TextDecorationsProperty, toggledTextDecorations);

@@ -545,8 +545,8 @@ namespace System.Windows.Documents
                 InlineUIContainer inlineUIContainer = textReader.GetAdjacentElement(LogicalDirection.Backward) as InlineUIContainer;
                 BlockUIContainer blockUIContainer = textReader.GetAdjacentElement(LogicalDirection.Backward) as BlockUIContainer;
 
-                if ((inlineUIContainer == null || !(inlineUIContainer.Child is Image)) &&
-                    (blockUIContainer == null || !(blockUIContainer.Child is Image)))
+                if ((inlineUIContainer == null || !(inlineUIContainer.Child is global::System.Windows.Controls.Image)) &&
+                    (blockUIContainer == null || !(blockUIContainer.Child is global::System.Windows.Controls.Image)))
                 {
                     // Even when we serialize for DataFormats.XamlPackage we strip out UIElement
                     // different from Images.
@@ -578,7 +578,11 @@ namespace System.Windows.Documents
             }
 
             // Write properties
+#if HAS_UNO
+            DependencyObject complexProperties = new FormattingDependencyObject();
+#else
             DependencyObject complexProperties = new DependencyObject();
+#endif
             WriteInheritableProperties(elementTypeStandardized, textReader, xmlWriter, /*onlyAffected:*/true, complexProperties);
             WriteNoninheritableProperties(elementTypeStandardized, textReader, xmlWriter, /*onlyAffected:*/true, complexProperties);
             if (customTextElement)
@@ -690,7 +694,11 @@ namespace System.Windows.Documents
             xmlWriter.WriteAttributeString("xml:space", "preserve");
 
             // Write all contextual properties as attributes of root fragment
+#if HAS_UNO
+            DependencyObject complexProperties = new FormattingDependencyObject();
+#else
             DependencyObject complexProperties = new DependencyObject();
+#endif
             if (useFlowDocumentAsRoot)
             {
                 WriteInheritablePropertiesForFlowDocument((DependencyObject)((TextPointer)context).Parent, xmlWriter, complexProperties);
@@ -1146,6 +1154,7 @@ namespace System.Windows.Documents
         /// </param>
         private static void WriteEmbeddedObject(object embeddedObject, XmlWriter xmlWriter, WpfPayload wpfPayload)
         {
+#if !HAS_UNO
             if (wpfPayload != null && embeddedObject is Image)
             {
                 // Writing in WPF mode: need to create an image with a Source referring into a package
@@ -1200,6 +1209,7 @@ namespace System.Windows.Documents
                 }
             }
             else
+#endif
             {
                 // In non-package mode we ignore all UIElements.
                 // Output a space replacing this embedded element.
@@ -1897,7 +1907,7 @@ namespace System.Windows.Documents
                 while (hyperlinkNavigation.CompareTo(hyperlinkEnd) < 0)
                 {
                     InlineUIContainer inlineUIContainer = hyperlinkNavigation.GetAdjacentElement(LogicalDirection.Forward) as InlineUIContainer;
-                    if (inlineUIContainer != null && !(inlineUIContainer.Child is Image))
+                    if (inlineUIContainer != null && !(inlineUIContainer.Child is global::System.Windows.Controls.Image))
                     {
                         hyperlinkInvalid = true;
                         break;
