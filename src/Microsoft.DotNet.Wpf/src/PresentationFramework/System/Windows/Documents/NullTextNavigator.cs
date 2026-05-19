@@ -150,7 +150,11 @@ namespace System.Windows.Documents
         /// <remarks>Returns an empty enumerator if there is no scoping element</remarks>
         LocalValueEnumerator ITextPointer.GetLocalValueEnumerator()
         {
+#if HAS_UNO
+            return (new FormattingDependencyObject()).GetLocalValueEnumerator();
+#else
             return (new DependencyObject()).GetLocalValueEnumerator();
+#endif
         }
 
         /// <summary>
@@ -409,7 +413,11 @@ namespace System.Windows.Documents
                 // There is no content in this container.
                 // We want to behave consistently with FixedTextPointer so we know
                 // we're at the root when the parent is a FixedDocument
+#if HAS_UNO
+                return typeof(object); // FixedDocument not available on HAS_UNO
+#else
                 return typeof(FixedDocument);
+#endif
             }
         }
 
