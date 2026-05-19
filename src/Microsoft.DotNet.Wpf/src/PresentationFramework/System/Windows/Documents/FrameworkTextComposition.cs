@@ -146,6 +146,7 @@ namespace System.Windows.Documents
         //
         //------------------------------------------------------
 
+#if !HAS_UNO
         internal static void CompleteCurrentComposition(UnsafeNativeMethods.ITfDocumentMgr documentMgr)
         {
             UnsafeNativeMethods.ITfContext context;
@@ -178,6 +179,7 @@ namespace System.Windows.Documents
 
             return view;
         }
+#endif
 
         // Set result string to TextComposition.
         internal void SetResultPositions(ITextPointer start, ITextPointer end, string text)
@@ -310,6 +312,7 @@ namespace System.Windows.Documents
         /// <summary>
         ///     Get ITfContextView of the context.
         /// </summary>
+#if !HAS_UNO
         private static UnsafeNativeMethods.ITfCompositionView GetComposition(UnsafeNativeMethods.ITfContext context)
         {
             UnsafeNativeMethods.ITfContextComposition contextComposition;
@@ -325,6 +328,7 @@ namespace System.Windows.Documents
             Marshal.ReleaseComObject(enumCompositionView);
             return compositionViews[0];
         }
+#endif
 
         //------------------------------------------------------
         //
