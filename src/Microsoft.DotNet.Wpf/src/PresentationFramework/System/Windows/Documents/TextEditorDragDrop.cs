@@ -199,7 +199,11 @@ namespace System.Windows.Documents
             private bool InitialThresholdCrossed(Point dragPoint)
             {
                 // Check the current poisition is in the drag rect.
+#if HAS_UNO
+                return !_dragRect.Contains(new global::Windows.Foundation.Point(dragPoint.X, dragPoint.Y));
+#else
                 return !_dragRect.Contains(dragPoint.X, dragPoint.Y);
+#endif
             }
 
             /// <summary>
@@ -207,6 +211,9 @@ namespace System.Windows.Documents
             /// </summary>
             private void SourceDoDragDrop(ITextSelection selection, IDataObject dataObject)
             {
+#if HAS_UNO
+                return; // Drag-drop is not yet wired to Uno cross-platform API.
+#else
                 // Run OLE drag-drop process. It will eat all user input until the drop
                 DragDropEffects allowedDragDropEffects = DragDropEffects.Copy;
                 if (!_textEditor.IsReadOnly)
@@ -269,6 +276,7 @@ namespace System.Windows.Documents
                         bindingExpression.UpdateTarget();
                     }
                 }
+#endif // !HAS_UNO
             }
 
             // Creates DropCaret
@@ -624,6 +632,9 @@ namespace System.Windows.Documents
 
             private bool AllowDragDrop(DragEventArgs e)
             {
+#if HAS_UNO
+                return !_textEditor.IsReadOnly && _textEditor.TextView != null && _textEditor.TextView.RenderScope != null;
+#else
                 if (!_textEditor.IsReadOnly && _textEditor.TextView != null && _textEditor.TextView.RenderScope != null)
                 {
                     Window window = Window.GetWindow(_textEditor.TextView.RenderScope);
@@ -641,6 +652,7 @@ namespace System.Windows.Documents
 
                 e.Effects = DragDropEffects.None;
                 return false;
+#endif // !HAS_UNO
             }
 
             /// <summary>
@@ -648,6 +660,7 @@ namespace System.Windows.Documents
             /// </summary>
             private void Win32SetForegroundWindow()
             {
+#if !HAS_UNO
                 PresentationSource source = null;
                 IntPtr hwnd = IntPtr.Zero;
                 source = PresentationSource.CriticalFromVisual(_textEditor.UiScope);
@@ -660,6 +673,7 @@ namespace System.Windows.Documents
                 {
                     UnsafeNativeMethods.SetForegroundWindow(new HandleRef(null, hwnd));
                 }
+#endif // !HAS_UNO
             }
 
             private ITextView TextView

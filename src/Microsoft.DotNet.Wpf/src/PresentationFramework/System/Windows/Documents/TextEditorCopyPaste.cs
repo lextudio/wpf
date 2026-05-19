@@ -91,6 +91,7 @@ namespace System.Windows.Documents
 
             // Get the rtf and xaml text and then copy it into the data object after confirm data format.
             // We do this only if our content is rich
+#if !HAS_UNO
             if (This.AcceptsRichContent)
             {
                     Stream wpfContainerMemory = null;
@@ -146,6 +147,7 @@ namespace System.Windows.Documents
                     }
                 }
             }
+#endif // !HAS_UNO
 
             // Notify application about our data object preparation completion
             DataObjectCopyingEventArgs dataObjectCopyingEventArgs = new DataObjectCopyingEventArgs(dataObject, /*isDragDrop:*/isDragDrop);
@@ -289,7 +291,9 @@ namespace System.Windows.Documents
                         Clipboard.SetDataObject(dataObject, copy: true);
                     }
                     catch (ExternalException)
+#if !HAS_UNO
                         when (!FrameworkCompatibilityPreferences.ShouldThrowOnCopyOrCutFailure)
+#endif
                     {
                         // Clipboard is failed to set the data object.
                         return;
@@ -334,8 +338,10 @@ namespace System.Windows.Documents
                         // One of reason should be the opening fail of Clipboard by the destroyed hwnd.
                         Clipboard.SetDataObject(dataObject, copy: true);
                     }
-                    catch (ExternalException) 
+                    catch (ExternalException)
+#if !HAS_UNO
                         when (!FrameworkCompatibilityPreferences.ShouldThrowOnCopyOrCutFailure)
+#endif
                     {
                         // Clipboard is failed to set the data object.
                         return;
@@ -416,6 +422,9 @@ namespace System.Windows.Documents
         // Converts xaml content to rtf content.
         internal static string ConvertXamlToRtf(string xamlContent, Stream wpfContainerMemory)
         {
+#if HAS_UNO
+            return string.Empty;
+#else
             // Create XamlRtfConverter to process the converting from Xaml to Rtf
             XamlRtfConverter xamlRtfConverter = new XamlRtfConverter();
             if (wpfContainerMemory != null)
@@ -427,11 +436,15 @@ namespace System.Windows.Documents
             string rtfContent = xamlRtfConverter.ConvertXamlToRtf(xamlContent);
 
             return rtfContent;
+#endif // !HAS_UNO
         }
 
         // Converts an rtf content to xaml content.
         internal static MemoryStream ConvertRtfToXaml(string rtfContent)
         {
+#if HAS_UNO
+            return null;
+#else
             MemoryStream memoryStream = new MemoryStream();
             WpfPayload wpfPayload = WpfPayload.CreateWpfPayload(memoryStream);
             using (wpfPayload.Package)
@@ -461,6 +474,7 @@ namespace System.Windows.Documents
             } // This closes the package
 
             return memoryStream;
+#endif // !HAS_UNO
         }
 
         #endregion Class Internal Methods
@@ -515,7 +529,11 @@ namespace System.Windows.Documents
                 return;
             }
 
+#if HAS_UNO
+            Cut(This, false);
+#else
             Cut(This, args.UserInitiated);
+#endif
         }
 
         /// <summary>
@@ -561,7 +579,11 @@ namespace System.Windows.Documents
                 return;
             }
 
+#if HAS_UNO
+            Copy(This, false);
+#else
             Copy(This, args.UserInitiated);
+#endif
         }
 
         /// <summary>
@@ -670,6 +692,7 @@ namespace System.Windows.Documents
         /// </returns>
         private static bool PasteContentData(TextEditor This, IDataObject dataObject, IDataObject dataObjectToApply, string formatToApply)
         {
+#if !HAS_UNO
             // CF_BITMAP - pasting a single image.
             if (formatToApply == DataFormats.Bitmap && dataObjectToApply is DataObject)
             {
@@ -735,6 +758,7 @@ namespace System.Windows.Documents
                     formatToApply = DataFormats.Text;
                 }
             }
+#endif // !HAS_UNO
 
             if (formatToApply == DataFormats.Xaml)
             {
@@ -911,12 +935,20 @@ namespace System.Windows.Documents
                 try
                 {
                     // Parse the fragment into a separate subtree
+#if HAS_UNO
+                    object xamlObject = XamlReader.Load(new XmlTextReader(new System.IO.StringReader(pasteXaml)));
+#else
                     object xamlObject = XamlReader.Load(new XmlTextReader(new System.IO.StringReader(pasteXaml)), useRestrictiveXamlReader: true);
+#endif
                     TextElement flowContent = xamlObject as TextElement;
 
                     success = flowContent == null ? false : PasteTextElement(This, flowContent);
                 }
+#if HAS_UNO
+                catch (Exception e)
+#else
                 catch (XamlParseException e)
+#endif
                 {
                     // Clipboard data can have the invalid xaml content that will throw
                     // the XamlParseException.
