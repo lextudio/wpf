@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Collections; // IList
+using System.Collections.Specialized; // NotifyCollectionChangedEventArgs
 using System.Windows.Controls; // TextBlock, ContentControl and AccessText
 using MS.Internal; // Invariant
 
@@ -13,7 +14,7 @@ namespace System.Windows.Documents
 {
     /// <summary>
     /// </summary>
-    public class TextElementCollection<TextElementType> : IList, ICollection<TextElementType> where TextElementType : TextElement
+    public partial class TextElementCollection<TextElementType> : IList, ICollection<TextElementType> where TextElementType : TextElement
     {
         //-------------------------------------------------------------------
         //
@@ -38,7 +39,12 @@ namespace System.Windows.Documents
         {
             if (isOwnerParent)
             {
+#if HAS_UNO
+                // WinUI's TextBlock isn't a text-tree owner in the shim.
+                Invariant.Assert(owner is TextElement || owner is FlowDocument);
+#else
                 Invariant.Assert(owner is TextElement || owner is FlowDocument || owner is TextBlock);
+#endif
             }
             else
             {
@@ -88,7 +94,11 @@ namespace System.Windows.Documents
             {
                 this.TextContainer.EndChange();
             }
+
+            OnUnoCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item));
         }
+
+        // Declaration is at the bottom of the class.
 
         /// <summary>
         /// </summary>
@@ -109,6 +119,8 @@ namespace System.Windows.Documents
             {
                 textContainer.EndChange();
             }
+
+            OnUnoCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
         /// <summary>
@@ -210,7 +222,7 @@ namespace System.Windows.Documents
             // In a scenario where you remove the owner itself from the collection, 
             // the owner belongs to another tree after the reposition.
 
-            TextContainer textContainer = this.TextContainer;          
+            TextContainer textContainer = this.TextContainer;
             textContainer.BeginChange();
             try
             {
@@ -220,6 +232,8 @@ namespace System.Windows.Documents
             {
                 textContainer.EndChange();
             }
+
+            OnUnoCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item));
 
             return true;
         }
@@ -264,6 +278,8 @@ namespace System.Windows.Documents
             {
                 this.TextContainer.EndChange();
             }
+
+            OnUnoCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, newItem));
         }
 
         /// <summary>
@@ -303,6 +319,8 @@ namespace System.Windows.Documents
             {
                 this.TextContainer.EndChange();
             }
+
+            OnUnoCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, newItem));
         }
 
         /// <summary>
@@ -687,11 +705,14 @@ namespace System.Windows.Documents
             {
                 TextContainer textContainer;
 
+#if !HAS_UNO
                 if (_owner is TextBlock)
                 {
                     textContainer = (TextContainer)((TextBlock)_owner).TextContainer;
                 }
-                else if (_owner is FlowDocument)
+                else
+#endif
+                if (_owner is FlowDocument)
                 {
                     textContainer = ((FlowDocument)_owner).TextContainer;
                 }
@@ -1036,5 +1057,10 @@ namespace System.Windows.Documents
         private ElementIndexCache _indexCache;
 
         #endregion Private Fields
+
+        // Partial method invoked after each mutation. WPF leaves this empty
+        // (no-op); the Uno shim provides an implementation in
+        // TextElementCollection.uno.cs that raises INotifyCollectionChanged.
+        partial void OnUnoCollectionChanged(NotifyCollectionChangedEventArgs args);
     }
 }

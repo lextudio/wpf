@@ -182,7 +182,7 @@ namespace System.Windows.Documents
         internal int GetListItemIndex(ListItem item)
         {
 #if HAS_UNO
-            return ListItems.IndexOf(item) is var index && index >= 0 ? StartIndex + index : StartIndex;
+            return ((System.Collections.IList)ListItems).IndexOf(item) is var index && index >= 0 ? StartIndex + index : StartIndex;
 #else
             // Check for valid arg
             ArgumentNullException.ThrowIfNull(item);
