@@ -45,9 +45,11 @@ namespace System.Windows.Documents
             _adornedElement = adornedElement;
             _isClipEnabled = false;
 
+#if !HAS_UNO
             // Bug 1383424: We need to make sure our FlowDirection is always that of our adorned element.
             // Need to allow derived class constructor to execute first
             Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.Normal, new DispatcherOperationCallback(CreateFlowDirectionBinding), this);
+#endif // !HAS_UNO
         }
 
         #endregion Constructors
@@ -69,12 +71,14 @@ namespace System.Windows.Documents
 
             desiredSize = new Size(AdornedElement.RenderSize.Width, AdornedElement.RenderSize.Height);
 
+#if !HAS_UNO
             int count = this.VisualChildrenCount;
             for (int i = 0; i < count; i++)
             {
                 UIElement ch = this.GetVisualChild(i) as UIElement;
                 ch?.Measure(desiredSize);
             }
+#endif // !HAS_UNO
 
             return desiredSize;
         }
@@ -88,10 +92,12 @@ namespace System.Windows.Documents
         /// Adorners can get inappropriately clipped if they draw outside of the bounding rect
         /// of the element they're adorning.  This is against the Adorner philosophy of being
         /// topmost, so we choose to ignore clip instead.</remarks>
+#if !HAS_UNO
         protected override Geometry GetLayoutClip(Size layoutSlotSize)
         {
             return null;
         }
+#endif // !HAS_UNO
   
         #endregion Protected Methods
 
@@ -135,17 +141,21 @@ namespace System.Windows.Documents
         /// Gets or sets the clip of this Visual.
         /// Needed by AdornerLayer
         /// </summary>
+#if !HAS_UNO
         internal Geometry AdornerClip
         {
-            get
-            {
-                return Clip;
-            }
-            set
-            {
-                Clip = value;
-            }
+            get { return Clip; }
+            set { Clip = value; }
         }
+#else
+        // On HAS_UNO, UIElement.Clip is RectangleGeometry not Geometry; use a backing field.
+        private Geometry _adornerClip;
+        internal Geometry AdornerClip
+        {
+            get { return _adornerClip; }
+            set { _adornerClip = value; }
+        }
+#endif // !HAS_UNO
 
 
         /// <summary>
@@ -202,6 +212,7 @@ namespace System.Windows.Documents
 
         #region Private Methods
 
+#if !HAS_UNO
         // Callback for binding the FlowDirection property.
         private static object CreateFlowDirectionBinding(object o)
         {
@@ -215,14 +226,19 @@ namespace System.Windows.Documents
 
             return null;
         }
+#endif // !HAS_UNO
 
         /// <summary>
-        /// Says if the Adorner needs update based on the 
+        /// Says if the Adorner needs update based on the
         /// previously cached size if the AdornedElement.
         /// </summary>
         internal virtual bool NeedsUpdate(Size oldSize)
         {
+#if !HAS_UNO
             return !DoubleUtil.AreClose(AdornedElement.RenderSize, oldSize);
+#else
+            return AdornedElement.RenderSize != oldSize;
+#endif
         }
 
         #endregion Private Methods

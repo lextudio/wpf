@@ -58,12 +58,13 @@ namespace System.Windows.Documents.Internal
         /// <returns>
         /// Transform to apply to the adorner
         /// </returns>
+#if !HAS_UNO
         public override GeneralTransform GetDesiredTransform(GeneralTransform transform)
         {
-            GeneralTransformGroup group;            
+            GeneralTransformGroup group;
             TranslateTransform translation;
 
-            group = new GeneralTransformGroup();            
+            group = new GeneralTransformGroup();
             translation = new TranslateTransform(_x, _top);
 
             group.Children.Add(translation);
@@ -75,6 +76,7 @@ namespace System.Windows.Documents.Internal
 
             return group;
         }
+#endif // !HAS_UNO
 
         #endregion Public Methods
 
@@ -87,13 +89,15 @@ namespace System.Windows.Documents.Internal
         #region Protected Methods
 
 
+#if !HAS_UNO
         protected override void OnRender(DrawingContext drawingContext)
         {
             // Render as a 2 pixel wide rect, one pixel in each bordering char bounding box.
 
-            drawingContext.DrawLine(_pen, new Point(0, 0), 
+            drawingContext.DrawLine(_pen, new Point(0, 0),
                                           new Point(0, _height));
         }
+#endif // !HAS_UNO
 
         #endregion Protected Events
 
