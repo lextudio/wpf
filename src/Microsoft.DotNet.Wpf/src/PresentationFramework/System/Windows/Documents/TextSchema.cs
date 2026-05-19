@@ -4,6 +4,12 @@
 using MS.Internal;
 using System.Windows.Controls; // TextBox, TextBlock
 using System.Windows.Media; // Brush
+#if HAS_UNO
+// Resolve `Image` to the WinUI control to avoid creating a WPF Image shim.
+// Properties on WinUI Image that don't exist (e.g. StretchDirectionProperty)
+// are guarded individually with #if !HAS_UNO at their reference sites.
+using Image = Microsoft.UI.Xaml.Controls.Image;
+#endif
 
 //
 // Description: A static class providing information about text content schema
@@ -40,9 +46,11 @@ namespace System.Windows.Documents
                 {
                     FrameworkElement.LanguageProperty,
                     FrameworkElement.FlowDirectionProperty,
+#if !HAS_UNO
                     NumberSubstitution.CultureSourceProperty,
                     NumberSubstitution.SubstitutionProperty,
                     NumberSubstitution.CultureOverrideProperty,
+#endif
                     TextElement.FontFamilyProperty,
                     TextElement.FontStyleProperty,
                     TextElement.FontWeightProperty,
@@ -266,8 +274,13 @@ namespace System.Windows.Documents
         /// </summary>
         internal static bool IsKnownType(Type elementType)
         {
+#if HAS_UNO
+            return elementType.Module == typeof(System.Windows.Documents.TextElement).Module || // shim assembly
+                elementType.Module == typeof(Microsoft.UI.Xaml.UIElement).Module; // Uno UIElement
+#else
             return elementType.Module == typeof(System.Windows.Documents.TextElement).Module || // presentationframework
                 elementType.Module == typeof(System.Windows.UIElement).Module; // presentationcore
+#endif
         }
 
         internal static bool IsNonFormattingInline(Type elementType)
@@ -824,8 +837,11 @@ namespace System.Windows.Documents
             }
             // Inline items
             else if (typeof(Span).IsAssignableFrom(parentType) ||
-                typeof(Paragraph).IsAssignableFrom(parentType) ||
-                typeof(AccessText).IsAssignableFrom(parentType))
+                typeof(Paragraph).IsAssignableFrom(parentType)
+#if !HAS_UNO
+                || typeof(AccessText).IsAssignableFrom(parentType)
+#endif
+                )
             {
                 return typeof(Inline).IsAssignableFrom(childType);
             }
@@ -959,7 +975,9 @@ namespace System.Windows.Documents
                 //TextElement.TextEffectsProperty, -- the property is not supported in text editor
 
                 // Inherits FrameworkContentElement properties
+#if !HAS_UNO
                 FrameworkContentElement.ToolTipProperty,
+#endif
             };
 
         // List of all non-inheritable properties applicable to Inline element
@@ -1029,7 +1047,9 @@ namespace System.Windows.Documents
         // List of all non-inheritable properties applicable to Table element
         private static readonly DependencyProperty[] _tableProperties = new DependencyProperty[]
             {
+#if !HAS_UNO
                 Table.CellSpacingProperty,
+#endif
 
                 // Inherits Block properties
                 Block.MarginProperty,
@@ -1068,6 +1088,7 @@ namespace System.Windows.Documents
         // List of all non-inheritable properties applicable to TableCell element
         private static readonly DependencyProperty[] _tableCellProperties = new DependencyProperty[]
             {
+#if !HAS_UNO
                 TableCell.ColumnSpanProperty,
                 TableCell.RowSpanProperty,
 
@@ -1075,6 +1096,7 @@ namespace System.Windows.Documents
                 TableCell.PaddingProperty,
                 TableCell.BorderThicknessProperty,
                 TableCell.BorderBrushProperty,
+#endif
 
                 // Inherits TextElement properties
                 TextElement.BackgroundProperty,
@@ -1150,7 +1172,9 @@ namespace System.Windows.Documents
             {
                 Image.SourceProperty,
                 Image.StretchProperty,
+#if !HAS_UNO
                 Image.StretchDirectionProperty,
+#endif
 
                 // Inherits FrameworkElement properties
                 //FrameworkElement.StyleProperty,
@@ -1160,7 +1184,9 @@ namespace System.Windows.Documents
                 //FrameworkElement.NameProperty,
                 //FrameworkElement.TagProperty,
                 //FrameworkElement.InputScopeProperty,
+#if !HAS_UNO
                 FrameworkElement.LayoutTransformProperty,
+#endif
                 FrameworkElement.WidthProperty,
                 FrameworkElement.MinWidthProperty,
                 FrameworkElement.MaxWidthProperty,
@@ -1172,10 +1198,14 @@ namespace System.Windows.Documents
                 FrameworkElement.HorizontalAlignmentProperty,
                 FrameworkElement.VerticalAlignmentProperty,
                 //FrameworkElement.FocusVisualStyleProperty,
+#if !HAS_UNO
                 FrameworkElement.CursorProperty,
                 FrameworkElement.ForceCursorProperty,
+#endif
                 //FrameworkElement.FocusableProperty,
+#if !HAS_UNO
                 FrameworkElement.ToolTipProperty,
+#endif
                 //FrameworkElement.ContextMenuProperty,
 
                 // Inherits UIElement properties
@@ -1183,16 +1213,24 @@ namespace System.Windows.Documents
                 UIElement.RenderTransformProperty,
                 UIElement.RenderTransformOriginProperty,
                 UIElement.OpacityProperty,
+#if !HAS_UNO
                 UIElement.OpacityMaskProperty,
                 UIElement.BitmapEffectProperty,
                 UIElement.BitmapEffectInputProperty,
+#endif
                 UIElement.VisibilityProperty,
+#if !HAS_UNO
                 UIElement.ClipToBoundsProperty,
+#endif
                 UIElement.ClipProperty,
+#if !HAS_UNO
                 UIElement.SnapsToDevicePixelsProperty,
+#endif
 
                 // Inherits TextBlock properties
+#if !HAS_UNO
                 TextBlock.BaselineOffsetProperty,
+#endif
             };
 
         // Behavioral property list
