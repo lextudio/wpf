@@ -854,12 +854,14 @@ namespace System.Windows.Documents
         // Uses s stack of list items indices and updates it for following list items.
         private static void PlainConvertAccessKey(StringBuilder textBuffer, ITextPointer navigator)
         {
+#if !HAS_UNO
             // Creating an "_" prefix for AccessKey character (represented as a Run with special serialization attribution)
             object element = navigator.GetAdjacentElement(LogicalDirection.Forward);
             if (AccessText.HasCustomSerialization(element))
             {
                 textBuffer.Append(AccessText.AccessKeyMarker);
             }
+#endif
         }
 
         // Helper for GetTextInternal, manages a char buffer.
@@ -1456,6 +1458,10 @@ namespace System.Windows.Documents
         {
             NormalizeRange(thisRange);
 
+#if HAS_UNO
+            // XAML serialization isn't enabled in the shim slice.
+            return string.Empty;
+#else
             // Create XmlWriter
             StringWriter stringWriter = new StringWriter(CultureInfo.InvariantCulture);
             XmlTextWriter xmlWriter = new XmlTextWriter(stringWriter);
@@ -1463,12 +1469,16 @@ namespace System.Windows.Documents
             TextRangeSerialization.WriteXaml(xmlWriter, thisRange, /*useFlowDocumentAsRoot:*/false, /*wpfPayload:*/null);
 
             return stringWriter.ToString();
+#endif
         }
 
         internal static bool CanSave(ITextRange thisRange, string dataFormat)
         {
             NormalizeRange(thisRange);
 
+#if HAS_UNO
+            return dataFormat == DataFormats.Text;
+#else
             bool canSave = (
                 dataFormat == DataFormats.Text ||
                 dataFormat == DataFormats.Xaml ||
@@ -1476,12 +1486,16 @@ namespace System.Windows.Documents
                     dataFormat == DataFormats.Rtf)));
 
             return canSave;
+#endif
         }
 
         internal static bool CanLoad(ITextRange thisRange, string dataFormat)
         {
             NormalizeRange(thisRange);
 
+#if HAS_UNO
+            return dataFormat == DataFormats.Text;
+#else
             bool canLoad = (
                 dataFormat == DataFormats.Text ||
                 dataFormat == DataFormats.Xaml ||
@@ -1489,6 +1503,7 @@ namespace System.Windows.Documents
                     dataFormat == DataFormats.Rtf)));
 
             return canLoad;
+#endif
         }
 
         internal static void Save(ITextRange thisRange, Stream stream, string dataFormat, bool preserveTextElements)
@@ -1505,6 +1520,7 @@ namespace System.Windows.Documents
                 textStreamWriter.Write(text);
                 textStreamWriter.Flush();
             }
+#if !HAS_UNO
             else if (dataFormat == DataFormats.Xaml)
             {
                 StreamWriter xamlStreamWriter = new StreamWriter(stream);
@@ -1532,6 +1548,7 @@ namespace System.Windows.Documents
                 rtfStreamWriter.Write(rtfText);
                 rtfStreamWriter.Flush();
             }
+#endif
             else
             {
                 // Unsupported format - thows exception
@@ -1558,6 +1575,7 @@ namespace System.Windows.Documents
                 string text = textStreamReader.ReadToEnd();
                 thisRange.Text = text;
             }
+#if !HAS_UNO
             else if (dataFormat == DataFormats.Xaml)
             {
                 StreamReader xamlStreamReader = new StreamReader(stream);
@@ -1590,6 +1608,7 @@ namespace System.Windows.Documents
                 }
                 thisRange.SetXmlVirtual(textElement);
             }
+#endif
             else
             {
                 // Unsupported format - thows exception
