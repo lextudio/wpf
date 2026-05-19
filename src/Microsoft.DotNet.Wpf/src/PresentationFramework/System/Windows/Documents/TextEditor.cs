@@ -79,20 +79,24 @@ namespace System.Windows.Documents
             // Listen to both TextContainer.EndChanging and TextContainer.Changed events
             TextContainer.Changed += new TextContainerChangedEventHandler(OnTextContainerChanged);
 
+#if !HAS_UNO
             // Add IsEnabled event handler for cleaning the caret element when uiScope is disabled
             _uiScope.IsEnabledChanged += new DependencyPropertyChangedEventHandler(OnIsEnabledChanged);
+#endif
 
             // Attach this instance of text editor to its uiScope
             _uiScope.SetValue(TextEditor.InstanceProperty, this);
 
+#if !HAS_UNO
             // The IsSpellerEnabled property might have been set before this
             // TextEditor was instantiated -- check if we need to rev
-            // up speller support.
+            // up speller support. (Spell-check stays out per the shim plan.)
             if ((bool)_uiScope.GetValue(SpellCheck.IsEnabledProperty))
             {
                 SetSpellCheckEnabled(true);
                 SetCustomDictionaries(true);
             }
+#endif
 
             // If no IME/TextServices are installed, we have no native reasources
             // to clean up at Finalizer.
@@ -169,8 +173,10 @@ namespace System.Windows.Documents
             // Remove both TextContainer.Changed event handlers
             _textContainer.Changed -= new TextContainerChangedEventHandler(OnTextContainerChanged);
 
+#if !HAS_UNO
             // Remove IsEnabled event handler that use for cleaning the caret element when uiScope is disabled
             _uiScope.IsEnabledChanged -= new DependencyPropertyChangedEventHandler(OnIsEnabledChanged);
+#endif
 
             // Cancel any pending InitTextStore callback that might still
             // be in the queue.
@@ -259,6 +265,7 @@ namespace System.Windows.Documents
         /// <returns></returns>
         internal void SetCustomDictionaries(bool add)
         {
+#if !HAS_UNO
             TextBoxBase textBoxBase = _uiScope as TextBoxBase;
             // We want CustomDictionaries to take effect only on TextBoxBase derived classes.
             if (textBoxBase == null)
@@ -271,6 +278,7 @@ namespace System.Windows.Documents
                 CustomDictionarySources dictionarySources = (CustomDictionarySources)SpellCheck.GetCustomDictionaries(textBoxBase);
                 _speller.SetCustomDictionaries(dictionarySources, add);
             }
+#endif
         }
 
         // Forwards a spelling reform property change off to the speller.
@@ -497,9 +505,17 @@ namespace System.Windows.Documents
             {
                 _mouseSelectionState = new MouseSelectionState
                 {
+#if HAS_UNO
+                    Timer = new DispatcherTimer()
+#else
                     Timer = new DispatcherTimer(DispatcherPriority.Normal)
+#endif
                 };
+#if HAS_UNO
+                _mouseSelectionState.Timer.Tick += (s, e) => HandleMouseSelectionTick(s, EventArgs.Empty);
+#else
                 _mouseSelectionState.Timer.Tick += new EventHandler(HandleMouseSelectionTick);
+#endif
                 // 400ms is the default value for MenuShowDelay. Creating timer with smaller value may
                 // cause Dispatcher queue starvation.
                 _mouseSelectionState.Timer.Interval = TimeSpan.FromMilliseconds(Math.Max(SystemParameters.MenuShowDelay, 200));
@@ -519,7 +535,9 @@ namespace System.Windows.Documents
             if (_mouseSelectionState != null)
             {
                 _mouseSelectionState.Timer.Stop();
+#if !HAS_UNO
                 _mouseSelectionState.Timer.Tick -= new EventHandler(HandleMouseSelectionTick);
+#endif
                 _mouseSelectionState = null;
             }
         }
@@ -976,6 +994,11 @@ namespace System.Windows.Documents
         /// </remarks>
         internal bool IsSpellCheckEnabled
         {
+#if HAS_UNO
+            // Spell-check stays out of the shim slice.
+            get => false;
+            set { }
+#else
             get
             {
                 return _uiScope == null ? false : (bool)_uiScope.GetValue(SpellCheck.IsEnabledProperty);
@@ -985,6 +1008,7 @@ namespace System.Windows.Documents
                 Invariant.Assert(_uiScope != null);
                 _uiScope.SetValue(SpellCheck.IsEnabledProperty, value);
             }
+#endif
         }
 
         /// <summary>
@@ -1317,7 +1341,11 @@ namespace System.Windows.Documents
                 {
                     scroller = FrameworkElement.GetFrameworkParent(scroller) as FrameworkElement;
 
+#if HAS_UNO
+                    if (scroller is ScrollViewer || scroller is Microsoft.UI.Xaml.Controls.ScrollContentPresenter)
+#else
                     if (scroller is ScrollViewer || scroller is ScrollContentPresenter)
+#endif
                     {
                         return scroller;
                     }
