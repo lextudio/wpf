@@ -2301,7 +2301,11 @@ namespace System.Windows.Documents
         {
             ITextPointer movingPosition = This.Selection.MovingPosition;
 
+#if HAS_UNO
+            if (true &&
+#else
             if (!(movingPosition is DocumentSequenceTextPointer || movingPosition is FixedTextPointer) &&
+#endif
                 movingPosition.LogicalDirection == LogicalDirection.Backward &&
                 This.Selection.Start.CompareTo(movingPosition) < 0 &&
                 TextPointerBase.IsNextToAnyBreak(movingPosition, LogicalDirection.Backward))

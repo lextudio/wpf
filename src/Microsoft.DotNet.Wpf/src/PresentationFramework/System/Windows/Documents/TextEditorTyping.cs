@@ -1596,6 +1596,9 @@ namespace System.Windows.Documents
         // it interleaves work items with the win32 input queue.
         private static bool IsMouseInputPending(TextEditor This)
         {
+#if HAS_UNO
+            return false;
+#else
             bool mouseInputPending = false;
             IWin32Window win32Window = PresentationSource.CriticalFromVisual(This.UiScope) as IWin32Window;
             if (win32Window != null)
@@ -1611,6 +1614,7 @@ namespace System.Windows.Documents
             }
 
             return mouseInputPending;
+#endif
         }
 
         // Background priority callback used to process keystrokes.
