@@ -714,11 +714,7 @@ namespace System.Windows.Documents
 #endif
                 if (_owner is FlowDocument)
                 {
-#if !HAS_UNO
                     textContainer = ((FlowDocument)_owner).TextContainer;
-#else
-                    textContainer = null;
-#endif
                 }
                 else
                 {

@@ -60,7 +60,7 @@ namespace System.Windows.Documents
     /// </remarks>
     [Localizability(LocalizationCategory.Inherit, Readability = Readability.Unreadable)]
     [ContentProperty("Blocks")]
-    public class FlowDocument : FrameworkContentElement, IDocumentPaginatorSource, IServiceProvider, IAddChild
+    public partial class FlowDocument : FrameworkContentElement, IDocumentPaginatorSource, IServiceProvider, IAddChild
     {
         private static readonly Type _typeofThis = typeof(FlowDocument);
 
