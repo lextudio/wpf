@@ -171,14 +171,7 @@ namespace System.Windows.Documents
         /// </remarks>
         public TextPointer ContentStart
         {
-            get
-            {
-#if HAS_UNO
-                return null;
-#else
-                return _structuralCache.TextContainer.Start;
-#endif
-            }
+            get { return _structuralCache.TextContainer.Start; }
         }
 
         /// <summary>
@@ -190,14 +183,7 @@ namespace System.Windows.Documents
         /// </remarks>
         public TextPointer ContentEnd
         {
-            get
-            {
-#if HAS_UNO
-                return null;
-#else
-                return _structuralCache.TextContainer.End;
-#endif
-            }
+            get { return _structuralCache.TextContainer.End; }
         }
 
         #region Public Dynamic Properties
@@ -860,11 +846,7 @@ namespace System.Windows.Documents
         {
             get
             {
-#if HAS_UNO
-                return MS.Internal.Controls.EmptyEnumerator.Instance;
-#else
                 return new RangeContentEnumerator(_structuralCache.TextContainer.Start, _structuralCache.TextContainer.End);
-#endif
             }
         }
 
@@ -1015,11 +997,9 @@ namespace System.Windows.Documents
         /// </summary>
         internal void InitializeForFirstFormatting()
         {
-#if !HAS_UNO
             _structuralCache.TextContainer.Changing += new EventHandler(OnTextContainerChanging);
             _structuralCache.TextContainer.Change += new TextContainerChangeEventHandler(OnTextContainerChange);
             _structuralCache.TextContainer.Highlights.Changed += new HighlightChangedEventHandler(OnHighlightChanged);
-#endif
         }
 
         /// <summary>
@@ -1027,12 +1007,10 @@ namespace System.Windows.Documents
         /// </summary>
         internal void Uninitialize()
         {
-#if !HAS_UNO
             _structuralCache.TextContainer.Changing -= new EventHandler(OnTextContainerChanging);
             _structuralCache.TextContainer.Change -= new TextContainerChangeEventHandler(OnTextContainerChange);
             _structuralCache.TextContainer.Highlights.Changed -= new HighlightChangedEventHandler(OnHighlightChanged);
             _structuralCache.IsFormattedOnce = false;
-#endif
         }
 
         /// <summary>
@@ -1267,13 +1245,11 @@ namespace System.Windows.Documents
         /// <param name="textContainer"></param>
         private void Initialize(TextContainer textContainer)
         {
-#if !HAS_UNO
             if (textContainer == null)
             {
                 // Create text tree that contains content of the element.
                 textContainer = new TextContainer(this, false /* plainTextOnly */);
             }
-#endif
             // Create structural cache object (Florence on HAS_UNO, PTS on desktop).
             _structuralCache = new StructuralCache(this, textContainer);
 
@@ -1709,10 +1685,8 @@ namespace System.Windows.Documents
 
             if (value is Block)
             {
-#if !HAS_UNO
                 TextContainer textContainer = _structuralCache.TextContainer;
                 ((Block)value).RepositionWithContent(textContainer.End);
-#endif
             }
             else
             {
@@ -1757,7 +1731,6 @@ namespace System.Windows.Documents
         object IServiceProvider.GetService(Type serviceType)
         {
             ArgumentNullException.ThrowIfNull(serviceType);
-#if !HAS_UNO
             if (serviceType == typeof(ITextContainer))
             {
                 return _structuralCache.TextContainer;
@@ -1766,7 +1739,6 @@ namespace System.Windows.Documents
             {
                 return _structuralCache.TextContainer as TextContainer;
             }
-#endif
             return null;
         }
 

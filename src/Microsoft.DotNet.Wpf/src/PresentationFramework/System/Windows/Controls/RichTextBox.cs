@@ -396,9 +396,7 @@ namespace System.Windows.Controls
                     this.RemoveLogicalChild(_document);
 
                     // Stop collecting text changes
-#if !HAS_UNO
                     _document.TextContainer.CollectTextChanges = false;
-#endif
 
                     // Clear thereference to a document
                     _document = null;
@@ -422,13 +420,11 @@ namespace System.Windows.Controls
                 // because it will discard it.
                 UIElement renderScope = this.RenderScope;
 
-#if !HAS_UNO
                 // Start collecting text changes
                 _document.TextContainer.CollectTextChanges = true;
 
                 // Attach to new text container and re-create TextEditor instance
                 this.InitializeTextContainer(_document.TextContainer);
-#endif
 
                 // Add listener for PageSize - to redirect it to inner renderScope.Width
                 _document.PageSizeChanged += new EventHandler(this.OnPageSizeChangedHandler);
