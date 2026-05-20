@@ -861,9 +861,6 @@ namespace System.Windows.Documents
         {
             get
             {
-#if HAS_UNO
-                return true;
-#else
                 if (!base.IsEnabledCore)
                 {
                     return false;
@@ -872,7 +869,6 @@ namespace System.Windows.Documents
                 RichTextBox parentRichTextBox = this.Parent as RichTextBox;
 
                 return (parentRichTextBox == null) ? true : parentRichTextBox.IsDocumentEnabled;
-#endif
             }
         }
 
@@ -1018,11 +1014,7 @@ namespace System.Windows.Documents
         /// </summary>
         internal Thickness ComputePageMargin()
         {
-#if HAS_UNO
-            double lineHeight = 0;
-#else
             double lineHeight = DynamicPropertyReader.GetLineHeightValue(this);
-#endif
             Thickness pageMargin = this.PagePadding;
 
             // If Padding value is 'Auto', treat it as 1*LineHeight.
@@ -1271,23 +1263,12 @@ namespace System.Windows.Documents
                 // Hence page metrics change is treated in the same way as ContentChanged
                 // spanning entire content.
                 fd._formatter?.OnContentInvalidated(true);
+            }
 
-                // Fire notification about the PageSize change - needed in RichTextBox
-                if (fd.PageSizeChanged != null)
-                {
-                    // NOTE: May execute external code, so it is possible to get
-                    //       an exception here.
-                    fd.PageSizeChanged(fd, EventArgs.Empty);
-                }
-            }
-#if HAS_UNO
-            // On HAS_UNO, IsFormattedOnce is false so the block above is skipped.
-            // Still fire PageSizeChanged so RichTextBox can react to page metric changes.
-            else
-            {
-                fd.PageSizeChanged?.Invoke(fd, EventArgs.Empty);
-            }
-#endif
+            // Fire notification about the PageSize change - needed in RichTextBox.
+            // Always fired regardless of IsFormattedOnce so layout-unaware hosts still react.
+            // NOTE: May execute external code, so it is possible to get an exception here.
+            fd.PageSizeChanged?.Invoke(fd, EventArgs.Empty);
         }
 
         /// <summary>
