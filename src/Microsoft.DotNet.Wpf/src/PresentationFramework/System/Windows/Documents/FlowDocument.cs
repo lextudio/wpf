@@ -757,7 +757,10 @@ namespace System.Windows.Documents
         /// </summary>
         public void SetDpi(DpiScale dpiInfo)
         {
-#if !HAS_UNO
+#if HAS_UNO
+            // Florence uses WinUI's DPI system natively; notify formatter to re-layout.
+            _formatter?.OnContentInvalidated(true);
+#else
             if (dpiInfo.PixelsPerDip != _pixelsPerDip)
             {
                 _pixelsPerDip = dpiInfo.PixelsPerDip;
@@ -789,6 +792,7 @@ namespace System.Windows.Documents
             base.OnPropertyChanged(e);
 
 #if !HAS_UNO
+            // FrameworkPropertyMetadata.AffectsRender / IsAValueChange are WPF-only APIs.
             if (e.IsAValueChange || e.IsASubPropertyChange)
             {
                 // Skip caches invalidation if content has not been formatted yet - non of caches are valid,
@@ -820,6 +824,10 @@ namespace System.Windows.Documents
                     }
                 }
             }
+#else
+            // On HAS_UNO any property change invalidates the Florence layout pass.
+            _structuralCache?.InvalidateFormatCache(false);
+            _formatter?.OnContentInvalidated(true);
 #endif
         }
 
@@ -1097,7 +1105,6 @@ namespace System.Windows.Documents
         /// <summary>
         /// An object which formats botomless content.
         /// </summary>
-#if !HAS_UNO
         internal FlowDocumentFormatter BottomlessFormatter
         {
             get
@@ -1125,7 +1132,6 @@ namespace System.Windows.Documents
                 return _structuralCache;
             }
         }
-#endif
 
         /// <summary>
         /// Typography properties group.
@@ -1160,7 +1166,6 @@ namespace System.Windows.Documents
         /// <summary>
         /// Formatter value
         /// </summary>
-#if !HAS_UNO
         internal IFlowDocumentFormatter Formatter
         {
             get
@@ -1168,9 +1173,7 @@ namespace System.Windows.Documents
                 return _formatter;
             }
         }
-#endif
 
-#if !HAS_UNO
         //-------------------------------------------------------------------
         // Is layout data is in a valid state.
         //-------------------------------------------------------------------
@@ -1189,6 +1192,7 @@ namespace System.Windows.Documents
 
         //-------------------------------------------------------------------
         // TextContainer associated with this FlowDocument.
+        // NOTE: Returns null on HAS_UNO until a TextContainer is wired up.
         //-------------------------------------------------------------------
         internal TextContainer TextContainer
         {
@@ -1203,10 +1207,14 @@ namespace System.Windows.Documents
         //-------------------------------------------------------------------
         internal double PixelsPerDip
         {
+#if HAS_UNO
+            get { return 1.0; }
+            set { }
+#else
             get { return _pixelsPerDip; }
             set { _pixelsPerDip = value; }
-        }
 #endif
+        }
 
         #endregion Internal Properties
 
@@ -1265,14 +1273,13 @@ namespace System.Windows.Documents
                 // Create text tree that contains content of the element.
                 textContainer = new TextContainer(this, false /* plainTextOnly */);
             }
-
-            // Create structural cache object
+#endif
+            // Create structural cache object (Florence on HAS_UNO, PTS on desktop).
             _structuralCache = new StructuralCache(this, textContainer);
 
             // Get rid of the current formatter.
             _formatter?.Suspend();
             _formatter = null;
-#endif
         }
 
         /// <summary>
@@ -1281,7 +1288,6 @@ namespace System.Windows.Documents
         private static void OnPageMetricsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             FlowDocument fd = (FlowDocument)d;
-#if !HAS_UNO
             if (fd._structuralCache != null && fd._structuralCache.IsFormattedOnce)
             {
                 // Notify formatter about content invalidation.
@@ -1298,8 +1304,13 @@ namespace System.Windows.Documents
                     fd.PageSizeChanged(fd, EventArgs.Empty);
                 }
             }
-#else
-            fd.PageSizeChanged?.Invoke(fd, EventArgs.Empty);
+#if HAS_UNO
+            // On HAS_UNO, IsFormattedOnce is false so the block above is skipped.
+            // Still fire PageSizeChanged so RichTextBox can react to page metric changes.
+            else
+            {
+                fd.PageSizeChanged?.Invoke(fd, EventArgs.Empty);
+            }
 #endif
         }
 
@@ -1657,9 +1668,9 @@ namespace System.Windows.Documents
 
         #region Private Fields
 
-#if !HAS_UNO
         private StructuralCache _structuralCache;                   // Structural cache for the content.
-        private IFlowDocumentFormatter _formatter;                  // Current formatter asociated with FlowDocument.
+        private IFlowDocumentFormatter _formatter;                  // Current formatter associated with FlowDocument.
+#if !HAS_UNO
         private double _pixelsPerDip = MS.Internal.FontCache.Util.PixelsPerDip;
 #endif
         private TypographyProperties _typographyPropertiesGroup;    // Cache for typography properties.
@@ -1769,7 +1780,6 @@ namespace System.Windows.Documents
 
         #region IDocumentPaginatorSource Members
 
-#if !HAS_UNO
         /// <summary>
         /// An object which paginates content.
         /// </summary>
@@ -1789,9 +1799,6 @@ namespace System.Windows.Documents
                 return (FlowDocumentPaginator)_formatter;
             }
         }
-#else
-        DocumentPaginator IDocumentPaginatorSource.DocumentPaginator => null;
-#endif
 
         #endregion IDocumentPaginatorSource Members
     }
