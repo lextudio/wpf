@@ -126,7 +126,9 @@ namespace System.Windows.Documents.Internal
                 {
                     // It may be null when TextBox is detached from a tree
                     adornerLayer.Update(AdornedElement);
+#if !HAS_UNO
                     adornerLayer.InvalidateVisual();
+#endif
                 }
             }
         }

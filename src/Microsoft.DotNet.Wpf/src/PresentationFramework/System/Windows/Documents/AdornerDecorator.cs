@@ -17,6 +17,7 @@ namespace System.Windows.Documents
     /// This AdornerDecorator does not hookup its child in the logical tree. It's being
     /// used by PopupRoot and FixedDocument.
     /// </summary>
+#if !HAS_UNO
     internal class NonLogicalAdornerDecorator : AdornerDecorator
     {
         public override UIElement Child
@@ -30,12 +31,12 @@ namespace System.Windows.Documents
                 if (IntChild != value)
                 {
                     this.RemoveVisualChild(IntChild);
-                    this.RemoveVisualChild(AdornerLayer);                    
+                    this.RemoveVisualChild(AdornerLayer);
                     IntChild = value;
                     if(value != null)
                     {
                         this.AddVisualChild(value);
-                        this.AddVisualChild(AdornerLayer);                        
+                        this.AddVisualChild(AdornerLayer);
                     }
 
                     InvalidateMeasure();
@@ -43,6 +44,7 @@ namespace System.Windows.Documents
             }
         }
     }
+#endif
 
 
     /// <summary>
@@ -138,7 +140,7 @@ namespace System.Windows.Documents
 
                 if (VisualTreeHelper.GetParent(_adornerLayer) != null)
                 {
-                    _adornerLayer.Arrange(new Rect(finalSize));
+                    _adornerLayer.Arrange(new Rect(0, 0, finalSize.Width, finalSize.Height));
                 }
 
                 return (inkSize);
@@ -179,13 +181,14 @@ namespace System.Windows.Documents
             }  
         }                                
 
+#if !HAS_UNO
         /// <summary>
         /// Returns the Visual children count.
         /// </summary>
         protected override int VisualChildrenCount
         {
-            get 
-            { 
+            get
+            {
                 if (base.Child != null)
                 {
                     return 2; // One for the child and one for the adorner layer.
@@ -210,7 +213,7 @@ namespace System.Windows.Documents
             {
                 switch (index)
                 {
-                    case 0: 
+                    case 0:
                         return base.Child;
 
                     case 1:
@@ -221,6 +224,7 @@ namespace System.Windows.Documents
                 }
             }
         }
+#endif
 
         #endregion Protected Methods
 
@@ -232,6 +236,7 @@ namespace System.Windows.Documents
 
         #region Private Members
 
+#if !HAS_UNO
         //
         //  This property
         //  1. Finds the correct initial size for the _effectiveValues store on the current DependencyObject
@@ -241,6 +246,7 @@ namespace System.Windows.Documents
         {
             get { return 6; }
         }
+#endif
 
         private readonly AdornerLayer _adornerLayer;
 

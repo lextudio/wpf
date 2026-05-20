@@ -13,8 +13,10 @@ using System.Collections.Specialized;
 using System.Windows.Threading;
 using System.Windows.Controls;
 using MS.Internal;
+#if !HAS_UNO
 using MS.Internal.Controls;
 using MS.Internal.Media;
+#endif
 
 namespace System.Windows.Documents
 {
@@ -129,9 +131,15 @@ namespace System.Windows.Documents
         /// our parent is GC'd.  So the implicit assumption is that the AdornerLayer, once
         /// created, exists until its parent is deleted.
         /// </remarks>
+#if !HAS_UNO
         internal AdornerLayer() : this(Dispatcher.CurrentDispatcher)
         {
         }
+#else
+        internal AdornerLayer()
+        {
+        }
+#endif
 
         /// <summary>
         /// Constructor
@@ -146,8 +154,10 @@ namespace System.Windows.Documents
         {
             ArgumentNullException.ThrowIfNull(context);
 
+#if !HAS_UNO
             LayoutUpdated += new EventHandler(OnLayoutUpdated);
             _children = new VisualCollection(this);
+#endif
         }
 
         #endregion Constructors
@@ -195,8 +205,10 @@ namespace System.Windows.Documents
 
             RemoveAdornerInfo(ElementMap, adorner, adorner.AdornedElement);
             RemoveAdornerInfo(_zOrderMap, adorner, adornerInfo.ZOrder);
+#if !HAS_UNO
             _children.Remove(adorner);
             RemoveLogicalChild(adorner);
+#endif
         }
 
         /// <summary>
@@ -275,6 +287,7 @@ namespace System.Windows.Documents
         /// is part of.  If the no adorner was hit, null is returned</returns>
         public AdornerHitTestResult AdornerHitTest(Point point)
         {
+#if !HAS_UNO
             PointHitTestResult result = VisualTreeUtils.AsNearestPointHitTestResult(VisualTreeHelper.HitTest(this, point, false));
 
             if (result != null && result.VisualHit != null)
@@ -297,6 +310,9 @@ namespace System.Windows.Documents
             {
                 return null;
             }
+#else
+            return null;
+#endif
         }
 
         /// <summary>
@@ -314,8 +330,8 @@ namespace System.Windows.Documents
             {
                 if (parent is AdornerDecorator)
                     return ((AdornerDecorator)parent).AdornerLayer;
-                if (parent is ScrollContentPresenter)
-                    return ((ScrollContentPresenter)parent).AdornerLayer;
+                if (parent is System.Windows.Controls.ScrollContentPresenter)
+                    return ((System.Windows.Controls.ScrollContentPresenter)parent).AdornerLayer;
 
                 parent = VisualTreeHelper.GetParent(parent) as Visual;
             }
@@ -359,13 +375,14 @@ namespace System.Windows.Documents
         ///  Remark: 
         ///      During this virtual method the Visual tree must not be modified.
         /// </summary>        
+#if !HAS_UNO
         protected override int VisualChildrenCount
         {
-            get 
-            { 
+            get
+            {
                 //_children cannot be null as its initialized in the constructor
-                return _children.Count; 
-            }       
+                return _children.Count;
+            }
         }
 
         /// <summary>
@@ -374,13 +391,13 @@ namespace System.Windows.Documents
         ///
         ///    By default a Visual does not have any children.
         ///
-        ///  Remark: 
-        ///       During this virtual call it is not valid to modify the Visual tree. 
+        ///  Remark:
+        ///       During this virtual call it is not valid to modify the Visual tree.
         /// </summary>
         protected override Visual GetVisualChild(int index)
         {
             //_children cannot be null as its initialized in the constructor
-            // index range check done by VisualCollection        
+            // index range check done by VisualCollection
             return _children[index];
         }
 
@@ -399,6 +416,7 @@ namespace System.Windows.Documents
                 return _children.GetEnumerator();
             }
         }
+#endif
         /// <summary>
         /// AdornerLayer always returns a size of (0,0).
         /// The AdornerLayer's size should be the same as its parent, but not take up layout space.  This means
@@ -409,6 +427,7 @@ namespace System.Windows.Documents
         /// </param>
         protected override Size MeasureOverride(Size constraint)
         {
+#if !HAS_UNO
             // Not using an enumerator because the list can be modified during the loop when we call out.
             DictionaryEntry[] zOrderMapEntries = new DictionaryEntry[_zOrderMap.Count];
             _zOrderMap.CopyTo(zOrderMapEntries, 0);
@@ -425,7 +444,7 @@ namespace System.Windows.Documents
                     adornerInfo.Adorner.Measure(constraint);
                 }
             }
-
+#endif
             // Returning 0,0 prevents an invalidation of Measure for AdornerLayer from unnecessarily dirtying the parent.
             return new Size();
         }
@@ -443,6 +462,7 @@ namespace System.Windows.Documents
         /// <param name="finalSize">The location reserved for this element by the parent</param>
         protected override Size ArrangeOverride(Size finalSize)
         {
+#if !HAS_UNO
             // Not using an enumerator because the list can be modified during the loop when we call out.
             DictionaryEntry[] zOrderMapEntries = new DictionaryEntry[_zOrderMap.Count];
             _zOrderMap.CopyTo(zOrderMapEntries, 0);
@@ -472,7 +492,7 @@ namespace System.Windows.Documents
                         {
                             // Get the matrix transform out, skip all non affine transforms
                             Transform transform = adornerTransform?.AffineTransform;
-                            
+
                             ((Adorner)(_children[index])).AdornerTransform = transform;
                         }
                     }
@@ -486,7 +506,7 @@ namespace System.Windows.Documents
                     }
                 }
             }
-
+#endif
             return finalSize;
         }
 
@@ -516,9 +536,11 @@ namespace System.Windows.Documents
 
             AddAdornerInfo(ElementMap, adornerInfo, adorner.AdornedElement);
 
+#if !HAS_UNO
             AddAdornerToVisualTree(adornerInfo, zOrder);
 
             AddLogicalChild(adorner);
+#endif
 
             UpdateAdorner(adorner.AdornedElement);
         }
@@ -531,7 +553,9 @@ namespace System.Windows.Documents
         {
             Debug.Assert(adornerInfo != null, "Adorner should not be null");
             adornerInfo.Adorner.InvalidateMeasure();
+#if !HAS_UNO
             adornerInfo.Adorner.InvalidateVisual();
+#endif
             adornerInfo.RenderSize = new Size(Double.NaN, Double.NaN);
             adornerInfo.Transform = null;
         }
@@ -568,9 +592,13 @@ namespace System.Windows.Documents
             }
 
             RemoveAdornerInfo(_zOrderMap, adorner, adornerInfo.ZOrder);
+#if !HAS_UNO
             _children.Remove(adorner);
+#endif
             adornerInfo.ZOrder = zOrder;
+#if !HAS_UNO
             AddAdornerToVisualTree(adornerInfo, zOrder);
+#endif
             InvalidateAdorner(adornerInfo);
             UpdateAdorner(adorner.AdornedElement);
         }
@@ -631,6 +659,7 @@ namespace System.Windows.Documents
         /// </summary>
         /// <param name="adornerInfo"></param>
         /// <param name="zOrder"></param>
+#if !HAS_UNO
         private void AddAdornerToVisualTree(AdornerInfo adornerInfo, int zOrder)
         {
             Adorner adorner = adornerInfo.Adorner;
@@ -667,6 +696,7 @@ namespace System.Windows.Documents
                 }
             }
         }
+#endif
 
         /// <summary>
         /// Remove all adorners for the given element
@@ -726,6 +756,7 @@ namespace System.Windows.Documents
                 size = element.RenderSize;
                 Geometry clip = null;
                 bool clipChanged = false;
+#if !HAS_UNO
                 if (adornerInfo.Adorner.IsClipEnabled)
                 {
                     clip = GetClipGeometry(adornerInfo.Adorner.AdornedElement, adornerInfo.Adorner);
@@ -740,14 +771,19 @@ namespace System.Windows.Documents
                     transform.AffineTransform == null || adornerInfo.Transform.AffineTransform == null ||
                     transform.AffineTransform.Value != adornerInfo.Transform.AffineTransform.Value ||
                     clipChanged)
+#else
+                if (adornerInfo.Adorner.NeedsUpdate(adornerInfo.RenderSize) || adornerInfo.Transform == null)
+#endif
                 {
                     InvalidateAdorner(adornerInfo);
                     adornerInfo.RenderSize = size;
                     adornerInfo.Transform = transform;
+#if !HAS_UNO
                     if (adornerInfo.Adorner.IsClipEnabled)
                     {
                         adornerInfo.Clip = clip;
                     }
+#endif
                     dirty = true;
                 }
             }
@@ -817,11 +853,12 @@ namespace System.Windows.Documents
         /// clip geometries as we go.  Called when IsClipEnabled == true to allow an adorner
         /// to be clipped (which normally, it isn't).
         /// </summary>
+#if !HAS_UNO
         private CombinedGeometry GetClipGeometry(Visual element, Adorner adorner)
         {
             Visual oldElement = null;
 
-            // we intentionally do not ascend in to a 3D scene            
+            // we intentionally do not ascend in to a 3D scene
             Visual adornerLayerParent = VisualTreeHelper.GetParent(this) as Visual;
             if (adornerLayerParent == null)
             {
@@ -891,6 +928,7 @@ namespace System.Windows.Documents
 
             return combinedGeometry;
         }
+#endif
 
         /// <summary>
         /// Remove the given adorner's AdornerInfo from the given AdornerInfo list.
@@ -958,13 +996,16 @@ namespace System.Windows.Documents
         //  1. Finds the correct initial size for the _effectiveValues store on the current DependencyObject
         //  2. This is a performance optimization
         //
+#if !HAS_UNO
         internal override int EffectiveValuesInitialSize
         {
             get { return 4; }
         }
+#endif
 
         private GeneralTransform GetProposedTransform(Adorner adorner, GeneralTransform sourceTransform)
         {
+#if !HAS_UNO
             // Flip horizontally if Right to Left.
             if (adorner.FlowDirection != this.FlowDirection)
             {
@@ -985,7 +1026,7 @@ namespace System.Windows.Documents
 
                 return group;
             }
-
+#endif
             return sourceTransform;
         }
 
@@ -1007,7 +1048,9 @@ namespace System.Windows.Documents
         private HybridDictionary _elementMap = new HybridDictionary(10);
         private SortedList _zOrderMap = new SortedList(10);
         private const int DefaultZOrder = System.Int32.MaxValue;
+#if !HAS_UNO
         private VisualCollection _children;
+#endif
 
         #endregion Private Fields
     }

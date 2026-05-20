@@ -494,8 +494,10 @@ namespace System.Windows.Documents
                 // Delete the caret
                 if (_caretDragDrop != null)
                 {
+#if !HAS_UNO
                     AdornerLayer layer = AdornerLayer.GetAdornerLayer(TextView.RenderScope);
                     layer.Remove(_caretDragDrop);
+#endif
                     _caretDragDrop = null;
                 }
             }
