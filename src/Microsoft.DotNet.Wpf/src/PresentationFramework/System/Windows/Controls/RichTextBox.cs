@@ -24,7 +24,7 @@ namespace System.Windows.Controls
     /// </summary>
     [Localizability(LocalizationCategory.Inherit)]
     [ContentProperty("Document")]
-    public class RichTextBox : TextBoxBase, IAddChild
+    public partial class RichTextBox : TextBoxBase, IAddChild
     {
         // -----------------------------------------------------------
         //

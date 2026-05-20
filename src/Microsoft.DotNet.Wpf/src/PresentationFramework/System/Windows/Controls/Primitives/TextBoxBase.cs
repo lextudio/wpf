@@ -115,7 +115,11 @@ namespace System.Windows.Controls.Primitives
         /// <summary>
         /// Called when the Template's tree has been generated
         /// </summary>
+#if HAS_UNO
+        protected override void OnApplyTemplate()
+#else
         public override void OnApplyTemplate()
+#endif
         {
             base.OnApplyTemplate();
             AttachToVisualTree();
