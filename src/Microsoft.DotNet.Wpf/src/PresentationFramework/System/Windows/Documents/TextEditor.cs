@@ -68,7 +68,11 @@ namespace System.Windows.Documents
             // Create DragDropProcess
             //  Consider creating this object by demand. Avoid allocating this memory per each textbox
             // or at least make it global, because anyway, dragdrop process is only one in the system.
+#if HAS_UNO
+            _dragDropProcess = new TextEditorDragDrop._DragDropProcessUno(this);
+#else
             _dragDropProcess = new TextEditorDragDrop._DragDropProcess(this);
+#endif
 
             // By default we use IBeam cursor
             _cursor = Cursors.IBeam;
@@ -2017,7 +2021,7 @@ namespace System.Windows.Documents
         internal IParentUndoUnit _typingUndoUnit;
 
         // An object for storing dragdrop state during dragging
-        internal TextEditorDragDrop._DragDropProcess _dragDropProcess;
+        internal TextEditorDragDrop.IDragDropProcess _dragDropProcess;
 
         internal bool _forceWordSelection;
         internal bool _forceParagraphSelection;

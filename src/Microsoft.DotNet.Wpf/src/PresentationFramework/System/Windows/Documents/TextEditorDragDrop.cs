@@ -21,7 +21,7 @@ namespace System.Windows.Documents
     /// <summary>
     /// Text editing service for controls.
     /// </summary>
-    internal static class TextEditorDragDrop
+    internal static partial class TextEditorDragDrop
     {
         //------------------------------------------------------
         //
@@ -34,6 +34,7 @@ namespace System.Windows.Documents
         // Registers all text editing command handlers for a given control type
         internal static void _RegisterClassHandlers(Type controlType, bool readOnly, bool registerEventListeners)
         {
+#if !HAS_UNO
             if (!readOnly)
             {
                 EventManager.RegisterClassHandler(controlType, DragDrop.DropEvent, new DragEventHandler(OnClearState),true);
@@ -51,6 +52,7 @@ namespace System.Windows.Documents
                     EventManager.RegisterClassHandler(controlType, DragDrop.DropEvent, new DragEventHandler(OnDrop));
                 }
             }
+#endif // !HAS_UNO
         }
 
         #endregion Class Internal Methods        
@@ -63,8 +65,25 @@ namespace System.Windows.Documents
 
         #region Class Internal Types
 
+        /// <summary>
+        /// Shared contract between the WPF OLE drag-drop process and the Uno no-op stub,
+        /// allowing all call sites in TextEditor/TextEditorMouse/TextBoxBase to be unmodified.
+        /// </summary>
+        internal interface IDragDropProcess
+        {
+            bool SourceOnMouseLeftButtonDown(Point mouseDownPoint);
+            void DoMouseLeftButtonUp(MouseButtonEventArgs e);
+            bool SourceOnMouseMove(Point mouseMovePoint);
+            void TargetEnsureDropCaret();
+            void TargetOnDragEnter(DragEventArgs e);
+            void TargetOnDragOver(DragEventArgs e);
+            void TargetOnDrop(DragEventArgs e);
+            void DeleteCaret();
+        }
+
+#if !HAS_UNO
         // A structure used for storing DragDrop status during dragging process
-        internal class _DragDropProcess
+        internal class _DragDropProcess : IDragDropProcess
         {
             internal _DragDropProcess(TextEditor textEditor)
             {
@@ -706,6 +725,7 @@ namespace System.Windows.Documents
             // Rectangle centered on a drag point to allow for limited movement of the mouse pointer before a drag operation begins.
             private Rect _dragRect;
         }
+#endif // !HAS_UNO
 
         /// <summary>
         /// An event reporting that the query continue drag during drag-and-drop operation.
