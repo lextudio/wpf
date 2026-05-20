@@ -58,8 +58,10 @@ namespace System.Windows.Controls.Primitives
             InputMethod.IsInputMethodEnabledProperty.OverrideMetadata(typeof(TextBoxBase),
                 new FrameworkPropertyMetadata(new PropertyChangedCallback(OnInputMethodEnabledPropertyChanged)));
 
+#if !HAS_UNO
             IsEnabledProperty.OverrideMetadata(typeof(TextBoxBase), new UIPropertyMetadata(new PropertyChangedCallback(OnVisualStatePropertyChanged)));
             IsMouseOverPropertyKey.OverrideMetadata(typeof(TextBoxBase), new UIPropertyMetadata(new PropertyChangedCallback(OnVisualStatePropertyChanged)));
+#endif
         }
 
         /// <summary>
@@ -961,6 +963,7 @@ namespace System.Windows.Controls.Primitives
 
         internal override void ChangeVisualState(bool useTransitions)
         {
+#if !HAS_UNO
             // See ButtonBase.ChangeVisualState.
             // This method should be exactly like it, except we have a ReadOnly state instead of Pressed
             if (!IsEnabled)
@@ -990,6 +993,7 @@ namespace System.Windows.Controls.Primitives
             }
 
             base.ChangeVisualState(useTransitions);
+#endif
         }
 
         /// <summary>
@@ -1549,7 +1553,9 @@ namespace System.Windows.Controls.Primitives
             // Note that this.ScrollViewer will walk the tree from current TextEditor's render scope up to its ui scope.
             if (this.ScrollViewer != null)
             {
+#if !HAS_UNO
                 this.ScrollViewer.ScrollChanged += new ScrollChangedEventHandler(OnScrollChanged);
+#endif
 
                 //  We may delete the TextEditor.PageHeightProperty and use _Scroller.ViewportHeight direction
                 SetValue(TextEditor.PageHeightProperty, this.ScrollViewer.ViewportHeight);
@@ -1596,7 +1602,7 @@ namespace System.Windows.Controls.Primitives
         internal override void AddToEventRouteCore(EventRoute route, RoutedEventArgs args)
         {
             base.AddToEventRouteCore(route, args);
-
+#if !HAS_UNO
             // Walk up the tree from the RenderScope to this, adding each element to the route
             Visual visual = this.RenderScope;
             while (visual != this && visual != null)
@@ -1607,6 +1613,7 @@ namespace System.Windows.Controls.Primitives
                 }
                 visual = VisualTreeHelper.GetParent(visual) as Visual;
             }
+#endif
         }
 
 
@@ -1788,7 +1795,9 @@ namespace System.Windows.Controls.Primitives
 
             // Detach scroll handler from old scroll viewer.
             // Note that this.ScrollViewer will walk the tree from current TextEditor's render scope up to its ui scope.
+#if !HAS_UNO
             this.ScrollViewer?.ScrollChanged -= new ScrollChangedEventHandler(OnScrollChanged);
+#endif
 
             // Invalidate our cached copy of scroll viewer.
             _scrollViewer = null;
@@ -1822,6 +1831,7 @@ namespace System.Windows.Controls.Primitives
             // Clear TextView property in TextEditor
             _textEditor.TextView = null;
 
+#if !HAS_UNO
             // Remove our content from the renderScope
             if ((tbv = _renderScope as TextBoxView) != null)
             {
@@ -1836,6 +1846,7 @@ namespace System.Windows.Controls.Primitives
             {
                 Invariant.Assert(_renderScope == null, "_renderScope must be null here");
             }
+#endif
         }
 
         /// <summary>
@@ -1853,9 +1864,13 @@ namespace System.Windows.Controls.Primitives
         /// </summary>
         private static Brush GetDefaultSelectionTextBrush()
         {
+#if !HAS_UNO
             Brush selectionTextBrush = new SolidColorBrush(SystemColors.HighlightTextColor);
             selectionTextBrush.Freeze();
             return selectionTextBrush;
+#else
+            return System.Windows.Media.Brushes.White;
+#endif
         }
 
         /// <summary>
@@ -1977,11 +1992,13 @@ namespace System.Windows.Controls.Primitives
         /// </summary>
         internal virtual void OnScrollChanged(object sender, ScrollChangedEventArgs e)
         {
+#if !HAS_UNO
             //  We should avoid adding per-instance handlers in TextBox
             if (e.ViewportHeightChange != 0)
             {
                 SetValue(TextEditor.PageHeightProperty, e.ViewportHeight);
             }
+#endif
         }
 
         /// <summary>
@@ -2107,6 +2124,7 @@ namespace System.Windows.Controls.Primitives
                 CaretElement caretElement = textBoxBase.TextSelectionInternal.CaretElement;
                 if (caretElement != null)
                 {
+#if !HAS_UNO
                     if (e.Property == CaretBrushProperty)
                     {
                         caretElement.UpdateCaretBrush(TextSelection.GetCaretBrush(textBoxBase.TextEditor));
@@ -2115,7 +2133,7 @@ namespace System.Windows.Controls.Primitives
                     caretElement.InvalidateVisual();
                 }
 
-                
+
                 // If the TextBox is rendering its own selection we need to invalidate arrange here
                 // in order to ensure the selection is updated.
                 var textBoxView = textBoxBase?.RenderScope as TextBoxView;
@@ -2124,6 +2142,10 @@ namespace System.Windows.Controls.Primitives
                 {
                     textBoxView.InvalidateArrange();
                 }
+#else
+                    { }
+                }
+#endif
             }
         }
 

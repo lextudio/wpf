@@ -283,14 +283,20 @@ namespace System.Windows.Controls
         /// <summary>
         /// Creates AutomationPeer (<see cref="UIElement.OnCreateAutomationPeer"/>)
         /// </summary>
-        protected override AutomationPeer OnCreateAutomationPeer() 
+        protected override AutomationPeer OnCreateAutomationPeer()
         {
+#if !HAS_UNO
             return new RichTextBoxAutomationPeer(this);
+#else
+            return null;
+#endif
         }
 
         protected override void OnDpiChanged(DpiScale oldDpiScaleInfo, DpiScale newDpiScaleInfo)
         {
+#if !HAS_UNO
             Document?.SetDpi(newDpiScaleInfo);
+#endif
         }
 
         /// <summary>
@@ -313,6 +319,7 @@ namespace System.Windows.Controls
         // Allocates the initial render scope for this control.
         internal override FrameworkElement CreateRenderScope()
         {
+#if !HAS_UNO
             FlowDocumentView renderScope = new FlowDocumentView
             {
                 Document = this.Document
@@ -326,6 +333,9 @@ namespace System.Windows.Controls
             renderScope.OverridesDefaultStyle = true;
 
             return renderScope;
+#else
+            return new Microsoft.UI.Xaml.Controls.Grid();
+#endif
         }
 
         #endregion Protected Methods
@@ -353,12 +363,14 @@ namespace System.Windows.Controls
             {
                 ArgumentNullException.ThrowIfNull(value);
 
+#if !HAS_UNO
                 if (value != _document &&
-                    value.StructuralCache != null && value.StructuralCache.TextContainer != null && 
+                    value.StructuralCache != null && value.StructuralCache.TextContainer != null &&
                     value.StructuralCache.TextContainer.TextSelection != null)
                 {
                     throw new ArgumentException(SR.RichTextBox_DocumentBelongsToAnotherRichTextBoxAlready);
                 }
+#endif
 
                 if (_document != null && this.TextSelectionInternal.ChangeBlockLevel > 0)
                 {
@@ -541,7 +553,11 @@ namespace System.Windows.Controls
                 }
                 else
                 {
+#if !HAS_UNO
                     return new SingleChildEnumerator(this._document);
+#else
+                    return EmptyEnumerator.Instance;
+#endif
                 }
             }
         }
