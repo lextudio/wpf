@@ -86,10 +86,12 @@ namespace System.Windows.Documents
                 typographyProperties[i].OverrideMetadata(_typeofThis, new FrameworkPropertyMetadata(typographyChanged));
             }
 
+#if !HAS_UNO
             DefaultStyleKeyProperty.OverrideMetadata(_typeofThis, new FrameworkPropertyMetadata(_typeofThis));
             FocusableProperty.OverrideMetadata(_typeofThis, new FrameworkPropertyMetadata(true));
 
             ControlsTraceLogger.AddControl(TelemetryControls.FlowDocument);
+#endif
         }
 
         /// <summary>
@@ -171,7 +173,11 @@ namespace System.Windows.Documents
         {
             get
             {
+#if HAS_UNO
+                return null;
+#else
                 return _structuralCache.TextContainer.Start;
+#endif
             }
         }
 
@@ -186,7 +192,11 @@ namespace System.Windows.Documents
         {
             get
             {
+#if HAS_UNO
+                return null;
+#else
                 return _structuralCache.TextContainer.End;
+#endif
             }
         }
 
@@ -747,6 +757,7 @@ namespace System.Windows.Documents
         /// </summary>
         public void SetDpi(DpiScale dpiInfo)
         {
+#if !HAS_UNO
             if (dpiInfo.PixelsPerDip != _pixelsPerDip)
             {
                 _pixelsPerDip = dpiInfo.PixelsPerDip;
@@ -757,6 +768,7 @@ namespace System.Windows.Documents
                 // Notify formatter about content invalidation.
                 _formatter?.OnContentInvalidated(true);
             }
+#endif
         }
 
         //-------------------------------------------------------------------
@@ -776,6 +788,7 @@ namespace System.Windows.Documents
             // Always call base.OnPropertyChanged, otherwise Property Engine will not work.
             base.OnPropertyChanged(e);
 
+#if !HAS_UNO
             if (e.IsAValueChange || e.IsASubPropertyChange)
             {
                 // Skip caches invalidation if content has not been formatted yet - non of caches are valid,
@@ -807,6 +820,7 @@ namespace System.Windows.Documents
                     }
                 }
             }
+#endif
         }
 
         /// <summary>
@@ -814,7 +828,11 @@ namespace System.Windows.Documents
         /// </summary>
         protected override AutomationPeer OnCreateAutomationPeer()
         {
+#if HAS_UNO
+            return null;
+#else
             return new DocumentAutomationPeer(this);
+#endif
         }
 
         #endregion Protected Methods
@@ -834,7 +852,11 @@ namespace System.Windows.Documents
         {
             get
             {
+#if HAS_UNO
+                return MS.Internal.Controls.EmptyEnumerator.Instance;
+#else
                 return new RangeContentEnumerator(_structuralCache.TextContainer.Start, _structuralCache.TextContainer.End);
+#endif
             }
         }
 
@@ -849,6 +871,9 @@ namespace System.Windows.Documents
         {
             get
             {
+#if HAS_UNO
+                return true;
+#else
                 if (!base.IsEnabledCore)
                 {
                     return false;
@@ -857,6 +882,7 @@ namespace System.Windows.Documents
                 RichTextBox parentRichTextBox = this.Parent as RichTextBox;
 
                 return (parentRichTextBox == null) ? true : parentRichTextBox.IsDocumentEnabled;
+#endif
             }
         }
 
@@ -912,6 +938,7 @@ namespace System.Windows.Documents
                     }
                     element = parentOfEmbeddedElement;
                 }
+#if !HAS_UNO
                 if (parentOfEmbeddedElement is BlockUIContainer || parentOfEmbeddedElement is InlineUIContainer)
                 {
                     textPointer = TextContainerHelper.GetTextPointerForEmbeddedObject((FrameworkElement)element);
@@ -924,6 +951,11 @@ namespace System.Windows.Documents
             }
             flowContentPosition = textPointer as TextPointer;
             return flowContentPosition ?? ContentPosition.Missing;
+#else
+            }
+            flowContentPosition = textPointer as TextPointer;
+            return flowContentPosition;
+#endif
         }
 
         /// <summary>
@@ -935,6 +967,7 @@ namespace System.Windows.Documents
         /// <param name="child"></param>
         internal void OnChildDesiredSizeChanged(UIElement child)
         {
+#if !HAS_UNO
             if (_structuralCache != null && _structuralCache.IsFormattedOnce && !_structuralCache.ForceReformat)
             {
                 // If executed during formatting process, delay invalidation.
@@ -966,6 +999,7 @@ namespace System.Windows.Documents
                 // Notify formatter about content invalidation.
                 _formatter?.OnContentInvalidated(true, childStart, childEnd);
             }
+#endif
         }
 
         /// <summary>
@@ -973,9 +1007,11 @@ namespace System.Windows.Documents
         /// </summary>
         internal void InitializeForFirstFormatting()
         {
+#if !HAS_UNO
             _structuralCache.TextContainer.Changing += new EventHandler(OnTextContainerChanging);
             _structuralCache.TextContainer.Change += new TextContainerChangeEventHandler(OnTextContainerChange);
             _structuralCache.TextContainer.Highlights.Changed += new HighlightChangedEventHandler(OnHighlightChanged);
+#endif
         }
 
         /// <summary>
@@ -983,10 +1019,12 @@ namespace System.Windows.Documents
         /// </summary>
         internal void Uninitialize()
         {
+#if !HAS_UNO
             _structuralCache.TextContainer.Changing -= new EventHandler(OnTextContainerChanging);
             _structuralCache.TextContainer.Change -= new TextContainerChangeEventHandler(OnTextContainerChange);
             _structuralCache.TextContainer.Highlights.Changed -= new HighlightChangedEventHandler(OnHighlightChanged);
             _structuralCache.IsFormattedOnce = false;
+#endif
         }
 
         /// <summary>
@@ -994,7 +1032,11 @@ namespace System.Windows.Documents
         /// </summary>
         internal Thickness ComputePageMargin()
         {
+#if HAS_UNO
+            double lineHeight = 0;
+#else
             double lineHeight = DynamicPropertyReader.GetLineHeightValue(this);
+#endif
             Thickness pageMargin = this.PagePadding;
 
             // If Padding value is 'Auto', treat it as 1*LineHeight.
@@ -1034,10 +1076,12 @@ namespace System.Windows.Documents
             DependencyObject oldParent = this.Parent;
             base.OnNewParent(newParent);
 
+#if !HAS_UNO
             if (newParent is RichTextBox || oldParent is RichTextBox)
             {
                 CoerceValue(IsEnabledProperty);
             }
+#endif
         }
 
         #endregion Internal Methods
@@ -1053,6 +1097,7 @@ namespace System.Windows.Documents
         /// <summary>
         /// An object which formats botomless content.
         /// </summary>
+#if !HAS_UNO
         internal FlowDocumentFormatter BottomlessFormatter
         {
             get
@@ -1080,6 +1125,7 @@ namespace System.Windows.Documents
                 return _structuralCache;
             }
         }
+#endif
 
         /// <summary>
         /// Typography properties group.
@@ -1114,6 +1160,7 @@ namespace System.Windows.Documents
         /// <summary>
         /// Formatter value
         /// </summary>
+#if !HAS_UNO
         internal IFlowDocumentFormatter Formatter
         {
             get
@@ -1121,7 +1168,9 @@ namespace System.Windows.Documents
                 return _formatter;
             }
         }
+#endif
 
+#if !HAS_UNO
         //-------------------------------------------------------------------
         // Is layout data is in a valid state.
         //-------------------------------------------------------------------
@@ -1157,6 +1206,7 @@ namespace System.Windows.Documents
             get { return _pixelsPerDip; }
             set { _pixelsPerDip = value; }
         }
+#endif
 
         #endregion Internal Properties
 
@@ -1209,6 +1259,7 @@ namespace System.Windows.Documents
         /// <param name="textContainer"></param>
         private void Initialize(TextContainer textContainer)
         {
+#if !HAS_UNO
             if (textContainer == null)
             {
                 // Create text tree that contains content of the element.
@@ -1221,6 +1272,7 @@ namespace System.Windows.Documents
             // Get rid of the current formatter.
             _formatter?.Suspend();
             _formatter = null;
+#endif
         }
 
         /// <summary>
@@ -1229,6 +1281,7 @@ namespace System.Windows.Documents
         private static void OnPageMetricsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             FlowDocument fd = (FlowDocument)d;
+#if !HAS_UNO
             if (fd._structuralCache != null && fd._structuralCache.IsFormattedOnce)
             {
                 // Notify formatter about content invalidation.
@@ -1245,6 +1298,9 @@ namespace System.Windows.Documents
                     fd.PageSizeChanged(fd, EventArgs.Empty);
                 }
             }
+#else
+            fd.PageSizeChanged?.Invoke(fd, EventArgs.Empty);
+#endif
         }
 
         /// <summary>
@@ -1370,6 +1426,7 @@ namespace System.Windows.Documents
         /// <param name="args"></param>
         private void OnHighlightChanged(object sender, HighlightChangedEventArgs args)
         {
+#if !HAS_UNO
             TextSegment textSegment;
             int i;
 
@@ -1420,6 +1477,7 @@ namespace System.Windows.Documents
                     }
                 }
             }
+#endif
         }
 
         /// <summary>
@@ -1427,6 +1485,7 @@ namespace System.Windows.Documents
         /// </summary>
         private void OnTextContainerChanging(object sender, EventArgs args)
         {
+#if !HAS_UNO
             Invariant.Assert(sender == _structuralCache.TextContainer, "Received text change for foreign TextContainer.");
             Invariant.Assert(_structuralCache != null && _structuralCache.IsFormattedOnce, "Unexpected TextContainer.Changing callback before first format!");
 
@@ -1440,6 +1499,7 @@ namespace System.Windows.Documents
             // Remember the fact that content is changing.
             // OnTextContainerChange has to be received after this event.
             _structuralCache.IsContentChangeInProgress = true;
+#endif
         }
 
         /// <summary>
@@ -1449,6 +1509,7 @@ namespace System.Windows.Documents
         /// <param name="args"></param>
         private void OnTextContainerChange(object sender, TextContainerChangeEventArgs args)
         {
+#if !HAS_UNO
             DirtyTextRange dtr;
             ITextPointer segmentEnd;
 
@@ -1504,6 +1565,7 @@ namespace System.Windows.Documents
                 // Content has been changed, so reset appropriate flag.
                 _structuralCache.IsContentChangeInProgress = false;
             }
+#endif
         }
 
 
@@ -1595,11 +1657,13 @@ namespace System.Windows.Documents
 
         #region Private Fields
 
+#if !HAS_UNO
         private StructuralCache _structuralCache;                   // Structural cache for the content.
-        private TypographyProperties _typographyPropertiesGroup;    // Cache for typography properties.
         private IFlowDocumentFormatter _formatter;                  // Current formatter asociated with FlowDocument.
-        private TextWrapping _textWrapping = TextWrapping.Wrap;     // internal cache for TextBox/RichTextBox
         private double _pixelsPerDip = MS.Internal.FontCache.Util.PixelsPerDip;
+#endif
+        private TypographyProperties _typographyPropertiesGroup;    // Cache for typography properties.
+        private TextWrapping _textWrapping = TextWrapping.Wrap;     // internal cache for TextBox/RichTextBox
 
         #endregion Private Fields
 
@@ -1634,8 +1698,10 @@ namespace System.Windows.Documents
 
             if (value is Block)
             {
+#if !HAS_UNO
                 TextContainer textContainer = _structuralCache.TextContainer;
                 ((Block)value).RepositionWithContent(textContainer.End);
+#endif
             }
             else
             {
@@ -1680,6 +1746,7 @@ namespace System.Windows.Documents
         object IServiceProvider.GetService(Type serviceType)
         {
             ArgumentNullException.ThrowIfNull(serviceType);
+#if !HAS_UNO
             if (serviceType == typeof(ITextContainer))
             {
                 return _structuralCache.TextContainer;
@@ -1688,6 +1755,7 @@ namespace System.Windows.Documents
             {
                 return _structuralCache.TextContainer as TextContainer;
             }
+#endif
             return null;
         }
 
@@ -1701,6 +1769,7 @@ namespace System.Windows.Documents
 
         #region IDocumentPaginatorSource Members
 
+#if !HAS_UNO
         /// <summary>
         /// An object which paginates content.
         /// </summary>
@@ -1720,6 +1789,9 @@ namespace System.Windows.Documents
                 return (FlowDocumentPaginator)_formatter;
             }
         }
+#else
+        DocumentPaginator IDocumentPaginatorSource.DocumentPaginator => null;
+#endif
 
         #endregion IDocumentPaginatorSource Members
     }
