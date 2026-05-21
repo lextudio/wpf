@@ -1,6 +1,7 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+#if !HAS_UNO
 using System.Collections;
 using System.ComponentModel;
 using System.Globalization;
@@ -18,6 +19,9 @@ using MS.Internal.AppModel;
 using MS.Internal.Interop;
 using MS.Internal.KnownBoxes;
 using MS.Win32;
+#endif // !HAS_UNO
+
+#if !HAS_UNO
 using System.Diagnostics.CodeAnalysis;
 
 using BuildInfo = MS.Internal.PresentationFramework.BuildInfo;
@@ -8044,7 +8048,13 @@ namespace System.Windows
         // NOTE: if you add or remove any values in this enum, be sure to update Window.IsValidResizeMode()
     }
     #endregion Enums
+#endif // !HAS_UNO
 
+#if HAS_UNO
+using System.Collections;
+
+namespace System.Windows
+{
     internal class SingleChildEnumerator : IEnumerator
     {
         internal SingleChildEnumerator(object Child)
@@ -8073,7 +8083,8 @@ namespace System.Windows
         private int _count = 0;
         private object _child;
     }
-}
+} // namespace System.Windows
+#endif // HAS_UNO
 
 
 
