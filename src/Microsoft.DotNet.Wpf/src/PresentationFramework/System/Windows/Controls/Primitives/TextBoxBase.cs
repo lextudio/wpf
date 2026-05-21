@@ -31,7 +31,7 @@ namespace System.Windows.Controls.Primitives
     /// </summary>
     [Localizability(LocalizationCategory.Text)]
     [TemplatePart(Name = "PART_ContentHost", Type = typeof(FrameworkElement))]
-    public abstract class TextBoxBase : Control
+    public abstract partial class TextBoxBase : Control
     {
         //------------------------------------------------------
         //

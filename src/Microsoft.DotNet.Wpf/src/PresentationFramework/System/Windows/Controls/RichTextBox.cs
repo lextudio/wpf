@@ -389,6 +389,8 @@ namespace System.Windows.Controls
                     // Remove the document from the logical tree
                     this.RemoveLogicalChild(_document);
 
+                    _document.Parent = null;
+
                     // Stop collecting text changes
                     _document.TextContainer.CollectTextChanges = false;
 
@@ -425,6 +427,7 @@ namespace System.Windows.Controls
 
                 // Add the document as a child to the logical tree
                 this.AddLogicalChild(_document);
+                _document.Parent = this;
 
                 // Re-attach to visual tree
                 if (renderScope != null)
