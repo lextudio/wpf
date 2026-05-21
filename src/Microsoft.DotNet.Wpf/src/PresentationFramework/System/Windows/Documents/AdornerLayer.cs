@@ -208,6 +208,8 @@ namespace System.Windows.Documents
 #if !HAS_UNO
             _children.Remove(adorner);
             RemoveLogicalChild(adorner);
+#else
+            _unoHost?.RemoveAdorner(adorner);
 #endif
         }
 
@@ -324,10 +326,21 @@ namespace System.Windows.Documents
         {
             ArgumentNullException.ThrowIfNull(visual);
 
+#if HAS_UNO
+            if (visual is IUnoAdornerLayerSource source)
+            {
+                return source.AdornerLayer;
+            }
+#endif
+
             Visual parent = VisualTreeHelper.GetParent(visual) as Visual;
 
             while (parent != null)
             {
+#if HAS_UNO
+                if (parent is IUnoAdornerLayerSource unoSource)
+                    return unoSource.AdornerLayer;
+#endif
                 if (parent is AdornerDecorator)
                     return ((AdornerDecorator)parent).AdornerLayer;
                 if (parent is System.Windows.Controls.ScrollContentPresenter)
@@ -535,11 +548,17 @@ namespace System.Windows.Documents
             };
 
             AddAdornerInfo(ElementMap, adornerInfo, adorner.AdornedElement);
+#if HAS_UNO
+            AddAdornerInfo(_zOrderMap, adornerInfo, zOrder);
+#endif
 
 #if !HAS_UNO
             AddAdornerToVisualTree(adornerInfo, zOrder);
 
             AddLogicalChild(adorner);
+#else
+            _unoHost ??= GetAdornerLayerHost(adorner.AdornedElement);
+            _unoHost?.AddAdorner(adorner, zOrder);
 #endif
 
             UpdateAdorner(adorner.AdornedElement);
@@ -598,6 +617,10 @@ namespace System.Windows.Documents
             adornerInfo.ZOrder = zOrder;
 #if !HAS_UNO
             AddAdornerToVisualTree(adornerInfo, zOrder);
+#else
+            AddAdornerInfo(_zOrderMap, adornerInfo, zOrder);
+            _unoHost ??= GetAdornerLayerHost(adorner.AdornedElement);
+            _unoHost?.SetAdornerZOrder(adorner, zOrder);
 #endif
             InvalidateAdorner(adornerInfo);
             UpdateAdorner(adorner.AdornedElement);
@@ -730,11 +753,21 @@ namespace System.Windows.Documents
             Size size;
 
             // we intentionally do not ascend in to a 3D scene
-            Visual adornerLayerParent = VisualTreeHelper.GetParent(this) as Visual;
+            Visual adornerLayerParent;
+#if !HAS_UNO
+            adornerLayerParent = VisualTreeHelper.GetParent(this) as Visual;
             if (adornerLayerParent == null)
             {
                 return;
             }
+#else
+            _unoHost ??= GetAdornerLayerHost(element);
+            adornerLayerParent = _unoHost?.AdornerScope;
+            if (adornerLayerParent == null)
+            {
+                return;
+            }
+#endif
 
             Debug.Assert(element != null);
             ArrayList adornerInfos = ElementMap[element] as ArrayList;
@@ -748,7 +781,9 @@ namespace System.Windows.Documents
             //
             // See if the adorners need to be rerendered due to object resizing
             //
-            GeneralTransform transform = element.TransformToAncestor(adornerLayerParent);                            
+            GeneralTransform transform = element == adornerLayerParent
+                ? element.TransformToAncestor(element)
+                : element.TransformToAncestor(adornerLayerParent);
 
             for (int i = 0; i < adornerInfos.Count; i++)
             {
@@ -798,12 +833,22 @@ namespace System.Windows.Documents
         /// <param name="element">UIElement for which we're updating AdornerSet</param>
         private void UpdateAdorner(UIElement element)
         {
-            Visual adornerLayerParent = VisualTreeHelper.GetParent(this) as Visual;
+            Visual adornerLayerParent;
+#if !HAS_UNO
+            adornerLayerParent = VisualTreeHelper.GetParent(this) as Visual;
             if (adornerLayerParent == null)
             {
                 // Never update when the adorner layer is not part of a visual tree.
                 return;
             }
+#else
+            _unoHost ??= GetAdornerLayerHost(element);
+            adornerLayerParent = _unoHost?.AdornerScope;
+            if (adornerLayerParent == null)
+            {
+                return;
+            }
+#endif
 
             // We only expect one to have been removed on any one call.
             ArrayList removeList = new ArrayList(1);
@@ -811,7 +856,7 @@ namespace System.Windows.Documents
             if (element != null)
             {
                 // Make sure element is still beneath the adorner decorator
-                if (!element.IsDescendantOf(adornerLayerParent))
+                if (!ReferenceEquals(element, adornerLayerParent) && !element.IsDescendantOf(adornerLayerParent))
                 {
                     removeList.Add(element);
                 }
@@ -831,7 +876,7 @@ namespace System.Windows.Documents
                     UIElement elTemp = (UIElement)keys[i];
 
                     // Make sure element is still beneath the adorner decorator
-                    if (!elTemp.IsDescendantOf(adornerLayerParent))
+                    if (!ReferenceEquals(elTemp, adornerLayerParent) && !elTemp.IsDescendantOf(adornerLayerParent))
                     {
                         removeList.Add(elTemp);
                     }
@@ -847,6 +892,34 @@ namespace System.Windows.Documents
                 Clear((UIElement)removeList[i]);
             }
         }
+
+#if HAS_UNO
+        private static IUnoAdornerLayerHost GetAdornerLayerHost(UIElement element)
+        {
+            if (element == null)
+            {
+                return null;
+            }
+
+            if (element is IUnoAdornerLayerHost host)
+            {
+                return host;
+            }
+
+            Visual parent = VisualTreeHelper.GetParent(element) as Visual;
+            while (parent != null)
+            {
+                if (parent is IUnoAdornerLayerHost parentHost)
+                {
+                    return parentHost;
+                }
+
+                parent = VisualTreeHelper.GetParent(parent) as Visual;
+            }
+
+            return null;
+        }
+#endif
 
         /// <summary>
         /// Walk up the tree from the adorned element to the AdornerLayer's parent, accumulating
@@ -1050,6 +1123,10 @@ namespace System.Windows.Documents
         private const int DefaultZOrder = System.Int32.MaxValue;
 #if !HAS_UNO
         private VisualCollection _children;
+#endif
+        
+#if HAS_UNO
+        private IUnoAdornerLayerHost _unoHost;
 #endif
 
         #endregion Private Fields
