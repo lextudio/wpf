@@ -89,6 +89,7 @@ namespace System.Windows.Documents
             try
             {
                 item.RepositionWithContent(this.ContentEnd);
+                OnUnoItemAdded(item);
             }
             finally
             {
@@ -1062,5 +1063,6 @@ namespace System.Windows.Documents
         // (no-op); the Uno shim provides an implementation in
         // TextElementCollection.uno.cs that raises INotifyCollectionChanged.
         partial void OnUnoCollectionChanged(NotifyCollectionChangedEventArgs args);
+        partial void OnUnoItemAdded(TextElementType item);
     }
 }
