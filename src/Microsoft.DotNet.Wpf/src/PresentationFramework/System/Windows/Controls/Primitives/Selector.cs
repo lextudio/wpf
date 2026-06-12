@@ -100,7 +100,11 @@ namespace System.Windows.Controls.Primitives
         /// <param name="handler">Event Handler to be added</param>
         public static void AddSelectedHandler(DependencyObject element, RoutedEventHandler handler)
         {
+#if HAS_UNO
+            element.AddHandler(SelectedEvent, handler);
+#else
             FrameworkElement.AddHandler(element, SelectedEvent, handler);
+#endif
         }
 
         /// <summary>
@@ -111,7 +115,11 @@ namespace System.Windows.Controls.Primitives
         /// <param name="handler">Event Handler to be removed</param>
         public static void RemoveSelectedHandler(DependencyObject element, RoutedEventHandler handler)
         {
+#if HAS_UNO
+            element.RemoveHandler(SelectedEvent, handler);
+#else
             FrameworkElement.RemoveHandler(element, SelectedEvent, handler);
+#endif
         }
 
         /// <summary>
@@ -129,7 +137,11 @@ namespace System.Windows.Controls.Primitives
         /// <param name="handler">Event Handler to be added</param>
         public static void AddUnselectedHandler(DependencyObject element, RoutedEventHandler handler)
         {
+#if HAS_UNO
+            element.AddHandler(UnselectedEvent, handler);
+#else
             FrameworkElement.AddHandler(element, UnselectedEvent, handler);
+#endif
         }
 
         /// <summary>
@@ -140,7 +152,11 @@ namespace System.Windows.Controls.Primitives
         /// <param name="handler">Event Handler to be removed</param>
         public static void RemoveUnselectedHandler(DependencyObject element, RoutedEventHandler handler)
         {
+#if HAS_UNO
+            element.RemoveHandler(UnselectedEvent, handler);
+#else
             FrameworkElement.RemoveHandler(element, UnselectedEvent, handler);
+#endif
         }
 
         #endregion
@@ -699,6 +715,10 @@ namespace System.Windows.Controls.Primitives
             ItemValueBindingExpression.ClearValue(s);
 
             // select the corresponding item
+#if HAS_UNO
+            // No effective-value entries on Uno; always retry the coercion.
+            s.CoerceValue(SelectedValueProperty);
+#else
             EffectiveValueEntry entry = s.GetValueEntry(
                         s.LookupEntry(SelectedValueProperty.GlobalIndex),
                         SelectedValueProperty,
@@ -710,6 +730,7 @@ namespace System.Windows.Controls.Primitives
                 // been coerced to null.
                 s.CoerceValue(SelectedValueProperty);
             }
+#endif
         }
 
         /// <summary>
@@ -989,6 +1010,7 @@ namespace System.Windows.Controls.Primitives
 
         internal void RaiseIsSelectedChangedAutomationEvent(DependencyObject container, bool isSelected)
         {
+#if !HAS_UNO // automation peers are not bridged yet
             SelectorAutomationPeer selectorPeer = UIElementAutomationPeer.FromElement(this) as SelectorAutomationPeer;
             if (selectorPeer != null && selectorPeer.ItemPeers != null)
             {
@@ -999,6 +1021,7 @@ namespace System.Windows.Controls.Primitives
                     itemPeer?.RaiseAutomationIsSelectedChanged(isSelected);
                 }
             }
+#endif
         }
 
         internal void SetInitialMousePosition()
@@ -1112,6 +1135,10 @@ namespace System.Windows.Controls.Primitives
             // Also if you did coerce it then you will lose the attempted performance optimization
             // because it will get dereferenced immediately in order to supply a baseValue for coersion.
 
+#if HAS_UNO
+            // No deferred references on Uno; coerce unconditionally.
+            CoerceValue(SelectedIndexProperty);
+#else
             EffectiveValueEntry entry = GetValueEntry(
                         LookupEntry(SelectedIndexProperty.GlobalIndex),
                         SelectedIndexProperty,
@@ -1123,6 +1150,7 @@ namespace System.Windows.Controls.Primitives
             {
                 CoerceValue(SelectedIndexProperty);
             }
+#endif
 
             CoerceValue(SelectedItemProperty);
 
@@ -1464,13 +1492,25 @@ namespace System.Windows.Controls.Primitives
                 return;
 
             _cacheValid[(int)CacheBits.NewContainersArePending] = true;
+#if HAS_UNO
+            this.LayoutUpdated += OnLayoutUpdatedUno;
+#else
             this.LayoutUpdated += OnLayoutUpdated;
+#endif
         }
 
         private void OnLayoutUpdated(object sender, EventArgs e)
         {
             AdjustNewContainers();
         }
+
+#if HAS_UNO
+        // WinUI's LayoutUpdated is EventHandler<object>; adapt to the WPF handler.
+        private void OnLayoutUpdatedUno(object sender, object e)
+        {
+            OnLayoutUpdated(sender, EventArgs.Empty);
+        }
+#endif
 
         private void OnGeneratorStatusChanged(object sender, EventArgs e)
         {
@@ -1485,7 +1525,11 @@ namespace System.Windows.Controls.Primitives
             // remove the LayoutUpdate handler, if we'd set one earlier
             if (_cacheValid[(int)CacheBits.NewContainersArePending])
             {
+#if HAS_UNO
+                this.LayoutUpdated -= OnLayoutUpdatedUno;
+#else
                 this.LayoutUpdated -= OnLayoutUpdated;
+#endif
                 _cacheValid[(int)CacheBits.NewContainersArePending] = false;
             }
 
@@ -1694,6 +1738,20 @@ namespace System.Windows.Controls.Primitives
         // called by SelectionChanger
         internal void UpdatePublicSelectionProperties()
         {
+#if HAS_UNO
+            {
+                // No deferred-reference layer on Uno: compute the new index
+                // eagerly and write it as the current value.
+                int selectedIndex = SelectedIndex;
+                if ((selectedIndex > Items.Count - 1)
+                    || (selectedIndex == -1 && _selectedItems.Count > 0)
+                    || (selectedIndex > -1
+                        && (_selectedItems.Count == 0 || selectedIndex != _selectedItems[0].Index)))
+                {
+                    SetCurrentValueInternal(SelectedIndexProperty, InternalSelectedIndex);
+                }
+            }
+#else
             EffectiveValueEntry entry = GetValueEntry(
                         LookupEntry(SelectedIndexProperty.GlobalIndex),
                         SelectedIndexProperty,
@@ -1717,6 +1775,7 @@ namespace System.Windows.Controls.Primitives
                     SetCurrentDeferredValue(SelectedIndexProperty, new DeferredSelectedIndexReference(this));
                 }
             }
+#endif
 
             if (SelectedItem != InternalSelectedItem)
             {
