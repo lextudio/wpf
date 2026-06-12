@@ -6678,10 +6678,12 @@ namespace System.Windows.Controls
 
         #region Automation
 
+#if !HAS_UNO // automation peers are not bridged yet
         protected override System.Windows.Automation.Peers.AutomationPeer OnCreateAutomationPeer()
         {
             return new System.Windows.Automation.Peers.DataGridAutomationPeer(this);
         }
+#endif
 
         private CellAutomationValueHolder GetCellAutomationValueHolder(object item, DataGridColumn column)
         {
@@ -7968,7 +7970,11 @@ namespace System.Windows.Controls
         /// <summary>
         /// Override of OnApplyTemplate which clear the scroll host member
         /// </summary>
+#if HAS_UNO // WinUI declares OnApplyTemplate protected; WPF widens to public
+        protected override void OnApplyTemplate()
+#else
         public override void OnApplyTemplate()
+#endif
         {
             // If a new template has just been generated then
             // be sure to clear any stale ItemsHost references
