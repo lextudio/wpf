@@ -13,7 +13,11 @@ namespace System.Windows.Controls
     /// <summary>
     ///     Internal class that holds the DataGrid's column collection.  Handles error-checking columns as they come in.
     /// </summary>
+#if HAS_UNO
+    internal partial class DataGridColumnCollection : ObservableCollection<DataGridColumn>
+#else
     internal class DataGridColumnCollection : ObservableCollection<DataGridColumn>
+#endif
     {
         internal DataGridColumnCollection(DataGrid dataGridOwner)
         {
@@ -783,6 +787,7 @@ namespace System.Windows.Controls
 
         #endregion
 
+#if !HAS_UNO // Uno: width/realization/virtualization is owned by the shim width pass; these regions are stubbed in DataGridColumnCollection.uno.cs
         #region Star Column Helper
 
         /// <summary>
@@ -2474,6 +2479,7 @@ namespace System.Windows.Controls
         }
 
         #endregion
+#endif // !HAS_UNO
 
         #region Hidden Columns
 
@@ -2534,8 +2540,10 @@ namespace System.Windows.Controls
         private bool _columnWidthsComputationPending; // Flag indicating whether the columns width computaion operation is pending
         private Dictionary<DataGridColumn, DataGridLength> _originalWidthsForResize; // Dictionary to hold the original widths of columns for resize operation
         private double? _averageColumnWidth = null;       // average width of all visible columns
+#if !HAS_UNO // RealizedColumnsBlock belongs to the virtualization stack not bridged under Uno
         private List<RealizedColumnsBlock> _realizedColumnsBlockListForNonVirtualizedRows = null; // Realized columns for non-virtualized rows
         private List<RealizedColumnsBlock> _realizedColumnsBlockListForVirtualizedRows = null; // Realized columns for virtualized rows
+#endif
         private bool _hasVisibleStarColumns = false;
 
         #endregion

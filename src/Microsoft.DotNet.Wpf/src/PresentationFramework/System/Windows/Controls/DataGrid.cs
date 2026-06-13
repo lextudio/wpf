@@ -622,6 +622,7 @@ namespace System.Windows.Controls
                 }
                 else if ((e.Property == DataGridColumn.VisibilityProperty) || (e.Property == DataGridColumn.WidthProperty) || (e.Property == DataGridColumn.DisplayIndexProperty))
                 {
+#if !HAS_UNO
                     // DataGridCellsPanel needs to be re-measured when column visibility changes
                     // Recyclable containers may not be fully remeasured when they are brought in
                     foreach (DependencyObject container in ItemContainerGenerator.RecyclableContainers)
@@ -633,6 +634,10 @@ namespace System.Windows.Controls
                             cellsPresenter?.InvalidateDataGridCellsPanelMeasureAndArrange();
                         }
                     }
+#else
+                    if (e.Property == DataGridColumn.VisibilityProperty)
+                        BuildShimVisualTree();
+#endif
                 }
             }
 
@@ -653,10 +658,17 @@ namespace System.Windows.Controls
                 InternalColumns.NotifyPropertyChanged(d, propertyName, e, target);
             }
 
+#if HAS_UNO
+            if (DataGridHelper.ShouldNotifyColumnHeaders(target))
+            {
+                ShimNotifyColumnHeaders(d, e);
+            }
+#else
             if ((DataGridHelper.ShouldNotifyColumnHeadersPresenter(target) || DataGridHelper.ShouldNotifyColumnHeaders(target)) && ColumnHeadersPresenter != null)
             {
                 ColumnHeadersPresenter.NotifyPropertyChanged(d, propertyName, e, target);
             }
+#endif
         }
 
         /// <summary>
