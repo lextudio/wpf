@@ -61,7 +61,9 @@ namespace System.Windows.Controls
             // For this purpose we set listeners for all these properties:
             HookupInheritablePropertyListeners();
 
+#if !HAS_UNO
             ControlsTraceLogger.AddControl(TelemetryControls.RichTextBox);
+#endif
         }
 
         /// <summary>

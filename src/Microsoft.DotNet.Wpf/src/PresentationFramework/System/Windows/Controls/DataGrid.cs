@@ -25,7 +25,11 @@ namespace System.Windows.Controls
     ///     A DataGrid control that displays data in rows and columns and allows
     ///     for the entering and editing of data.
     /// </summary>
+#if HAS_UNO
+    public partial class DataGrid : MultiSelector
+#else
     public class DataGrid : MultiSelector
+#endif
     {
         #region Constructors
 
@@ -38,7 +42,9 @@ namespace System.Windows.Controls
 
             DefaultStyleKeyProperty.OverrideMetadata(ownerType, new FrameworkPropertyMetadata(typeof(DataGrid)));
             FrameworkElementFactory dataGridRowPresenterFactory = new FrameworkElementFactory(typeof(DataGridRowsPresenter));
+#if !HAS_UNO
             dataGridRowPresenterFactory.SetValue(FrameworkElement.NameProperty, ItemsPanelPartName);
+#endif
             ItemsPanelProperty.OverrideMetadata(ownerType, new FrameworkPropertyMetadata(new ItemsPanelTemplate(dataGridRowPresenterFactory)));
             VirtualizingPanel.IsVirtualizingProperty.OverrideMetadata(ownerType, new FrameworkPropertyMetadata(true, null, new CoerceValueCallback(OnCoerceIsVirtualizingProperty)));
             VirtualizingPanel.VirtualizationModeProperty.OverrideMetadata(ownerType, new FrameworkPropertyMetadata(VirtualizationMode.Recycling));
@@ -70,7 +76,9 @@ namespace System.Windows.Controls
 
             EventManager.RegisterClassHandler(typeof(DataGrid), MouseUpEvent, new MouseButtonEventHandler(OnAnyMouseUpThunk), true);
 
+#if !HAS_UNO
             ControlsTraceLogger.AddControl(TelemetryControls.DataGrid);
+#endif
         }
 
         /// <summary>
@@ -1147,7 +1155,11 @@ namespace System.Windows.Controls
             if (row.DetailsVisibility == Visibility.Visible && row.DetailsPresenter != null)
             {
                 // Invoke LoadingRowDetails, but only after the details template is expanded (so DetailsElement will be available).
+#if HAS_UNO
+                Dispatcher.BeginInvoke(new DispatcherOperationCallback(DelayedOnLoadingRowDetails), DispatcherPriority.Loaded, row);
+#else
                 Dispatcher.CurrentDispatcher.BeginInvoke(new DispatcherOperationCallback(DelayedOnLoadingRowDetails), DispatcherPriority.Loaded, row);
+#endif
             }
         }
 
@@ -1698,11 +1710,19 @@ namespace System.Windows.Controls
 
                 // Same priority as ListBox. Currently choosing SystemIdle over ApplicationIdle since the layout
                 // manger will do some work (sometimes) at ApplicationIdle.
+#if HAS_UNO
+                _autoScrollTimer = new DispatcherTimer()
+#else
                 _autoScrollTimer = new DispatcherTimer(DispatcherPriority.SystemIdle)
+#endif
                 {
                     Interval = AutoScrollTimeout
                 };
+#if HAS_UNO
+                _autoScrollTimer.Tick += (s, e) => OnAutoScrollTimeout(s, EventArgs.Empty);
+#else
                 _autoScrollTimer.Tick += new EventHandler(OnAutoScrollTimeout);
+#endif
                 _autoScrollTimer.Start();
             }
         }
@@ -5391,7 +5411,8 @@ namespace System.Windows.Controls
                     shouldProcess = (itemsControl == this);
                     if (!shouldProcess)
                     {
-                        DataGridCellsPresenter cellsPresenter = itemsControl as DataGridCellsPresenter;
+                        DataGridCellsPresenter cellsPresenter = e.OriginalSource as DataGridCellsPresenter
+                            ?? DataGridHelper.FindVisualParent<DataGridCellsPresenter>(e.OriginalSource as UIElement);
                         if (cellsPresenter != null)
                         {
                             shouldProcess = (cellsPresenter.DataGridOwner == this);
@@ -6500,7 +6521,16 @@ namespace System.Windows.Controls
             Rect cellBounds = new Rect(new Point(), cell.RenderSize);
 
             // Limit to only cells that are entirely visible
+#if HAS_UNO
+            Rect transformedBounds = transform.TransformBounds(cellBounds);
+            bool cellVisible = itemsHostBounds.Left <= transformedBounds.Left &&
+                               itemsHostBounds.Top <= transformedBounds.Top &&
+                               itemsHostBounds.Right >= transformedBounds.Right &&
+                               itemsHostBounds.Bottom >= transformedBounds.Bottom;
+            if (cellVisible)
+#else
             if (itemsHostBounds.Contains(transform.TransformBounds(cellBounds)))
+#endif
             {
                 Point pt = Mouse.GetPosition(cell);
                 if (isMouseInCorner)
@@ -6877,10 +6907,14 @@ namespace System.Windows.Controls
                     else
                     {
                         // lacking a cell, bind a dummy element directly to the data item
+#if HAS_UNO
+                        target = new ContentControl { DataContext = _item };
+#else
                         target = new FrameworkElement
                         {
                             DataContext = _item
                         };
+#endif
                     }
 
                     BindingOperations.SetBinding(target, CellContentProperty, _column.ClipboardContentBinding);
@@ -6915,10 +6949,14 @@ namespace System.Windows.Controls
                     else
                     {
                         // lacking a cell, bind a dummy element directly to the data item
+#if HAS_UNO
+                        target = new ContentControl { DataContext = _item };
+#else
                         target = new FrameworkElement
                         {
                             DataContext = _item
                         };
+#endif
                     }
 
                     BindingOperations.SetBinding(target, CellClipboardProperty, _column.ClipboardContentBinding);
