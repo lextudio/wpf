@@ -103,6 +103,12 @@ namespace System.Windows.Controls
             InternalColumns.InvalidateColumnWidthsComputation();
 
             CellsPanelHorizontalOffsetComputationPending = false;
+
+#if HAS_UNO
+            // Set the WinUI default-style key so Themes/Generic.xaml supplies a
+            // template (the WPF OverrideMetadata path is a no-op under the shim).
+            EnsureShimStyleKey();
+#endif
         }
 
         #endregion
@@ -8023,6 +8029,12 @@ namespace System.Windows.Controls
 
             CleanUpInternalScrollControls();
             base.OnApplyTemplate();
+
+#if HAS_UNO
+            // Populate the shim's code-built render path once the template
+            // (and thus PART_ShimRowsHost) is available.
+            BuildShimVisualTree();
+#endif
         }
 
         #endregion
