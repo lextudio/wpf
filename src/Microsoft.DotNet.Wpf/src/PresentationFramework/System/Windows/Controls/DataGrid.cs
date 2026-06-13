@@ -7229,7 +7229,11 @@ namespace System.Windows.Controls
                 sortDirection = ListSortDirection.Descending;
             }
 
+#if HAS_UNO
+            string sortPropertyName = (column as DataGridBoundColumn)?.EffectiveSortMemberPath ?? column.SortMemberPath;
+#else
             string sortPropertyName = column.SortMemberPath;
+#endif
             if (!string.IsNullOrEmpty(sortPropertyName))
             {
                 try

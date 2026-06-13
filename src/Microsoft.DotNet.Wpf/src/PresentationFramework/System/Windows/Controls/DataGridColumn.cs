@@ -13,7 +13,11 @@ namespace System.Windows.Controls
     /// <summary>
     ///     A base class for specifying the column definitions.
     /// </summary>
+#if HAS_UNO
+    public abstract partial class DataGridColumn : DependencyObject
+#else
     public abstract class DataGridColumn : DependencyObject
+#endif
     {
         #region Header
 
