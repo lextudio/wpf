@@ -2269,7 +2269,16 @@ namespace System.Windows.Controls
                         _editingRowInfo = ItemInfoFromContainer(cell.RowOwner);
                     }
 
-                    cell.BeginEdit(editingEventArgs);
+                    ShimExecutingBeginEditCommand = true;
+                    try
+                    {
+                        cell.BeginEdit(editingEventArgs);
+                    }
+                    finally
+                    {
+                        ShimExecutingBeginEditCommand = false;
+                    }
+
                     cell.RowOwner.IsEditing = true;
 
                     // Create a CellAutomationValueHolder object that has a binding to the content of the CurrentCell being  edited.
