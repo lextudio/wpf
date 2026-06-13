@@ -2345,71 +2345,79 @@ namespace System.Windows.Controls
         /// </summary>
         protected virtual void OnExecutedCommitEdit(ExecutedRoutedEventArgs e)
         {
-            DataGridCell cell = CurrentCellContainer;
-            bool validationPassed = true;
-            if (cell != null)
+            ShimExecutingCommitEditCommand = true;
+            try
             {
-                DataGridEditingUnit editingUnit = GetEditingUnit(e.Parameter);
-
-                bool eventCanceled = false;
-                if (cell.IsEditing)
+                DataGridCell cell = CurrentCellContainer;
+                bool validationPassed = true;
+                if (cell != null)
                 {
-                    DataGridCellEditEndingEventArgs cellEditEndingEventArgs = new DataGridCellEditEndingEventArgs(cell.Column, cell.RowOwner, cell.EditingElement, DataGridEditAction.Commit);
-                    OnCellEditEnding(cellEditEndingEventArgs);
+                    DataGridEditingUnit editingUnit = GetEditingUnit(e.Parameter);
 
-                    eventCanceled = cellEditEndingEventArgs.Cancel;
-                    if (!eventCanceled)
+                    bool eventCanceled = false;
+                    if (cell.IsEditing)
                     {
-                        validationPassed = cell.CommitEdit();
-                        HasCellValidationError = !validationPassed;
-                        UpdateCellAutomationValueHolder(cell);
-                    }
-                }
+                        DataGridCellEditEndingEventArgs cellEditEndingEventArgs = new DataGridCellEditEndingEventArgs(cell.Column, cell.RowOwner, cell.EditingElement, DataGridEditAction.Commit);
+                        OnCellEditEnding(cellEditEndingEventArgs);
 
-                // Consider commiting the row if:
-                // 1. Validation passed on the cell or no cell was in edit mode.
-                // 2. A cell in edit mode didn't have it's ending edit event canceled.
-                // 3. The row is being edited or added and being targeted directly.
-                if (validationPassed &&
-                    !eventCanceled &&
-                    IsAddingOrEditingRowItem(editingUnit, cell.RowDataItem))
-                {
-                    DataGridRowEditEndingEventArgs rowEditEndingEventArgs = new DataGridRowEditEndingEventArgs(cell.RowOwner, DataGridEditAction.Commit);
-                    OnRowEditEnding(rowEditEndingEventArgs);
-
-                    if (!rowEditEndingEventArgs.Cancel)
-                    {
-                        var bindingGroup = cell.RowOwner.BindingGroup;
-                        if (bindingGroup != null)
+                        eventCanceled = cellEditEndingEventArgs.Cancel;
+                        if (!eventCanceled)
                         {
-                            // CommitEdit will invoke the bindingGroup's ValidationRule's, so we need to make sure that all of the BindingExpressions
-                            // have already registered with the BindingGroup.  Synchronously flushing the Dispatcher to DataBind priority lets us ensure this.
-                            // Had we used BeginInvoke instead, IsEditing would not reflect the correct value.
-                            Dispatcher.Invoke(new DispatcherOperationCallback(DoNothing), DispatcherPriority.DataBind, bindingGroup);
-                            validationPassed = bindingGroup.CommitEdit();
-                        }
-
-                        HasRowValidationError = !validationPassed;
-                        if (validationPassed)
-                        {
-                            CommitRowItem();
+                            validationPassed = cell.CommitEdit();
+                            HasCellValidationError = !validationPassed;
+                            UpdateCellAutomationValueHolder(cell);
                         }
                     }
-                }
 
-                if (validationPassed)
-                {
-                    // Update the state of row editing
-                    UpdateRowEditing(cell);
-
-                    if (!cell.RowOwner.IsEditing)
+                    // Consider commiting the row if:
+                    // 1. Validation passed on the cell or no cell was in edit mode.
+                    // 2. A cell in edit mode didn't have it's ending edit event canceled.
+                    // 3. The row is being edited or added and being targeted directly.
+                    if (validationPassed &&
+                        !eventCanceled &&
+                        IsAddingOrEditingRowItem(editingUnit, cell.RowDataItem))
                     {
-                        ReleaseCellAutomationValueHolders();
-                    }
-                }
+                        DataGridRowEditEndingEventArgs rowEditEndingEventArgs = new DataGridRowEditEndingEventArgs(cell.RowOwner, DataGridEditAction.Commit);
+                        OnRowEditEnding(rowEditEndingEventArgs);
 
-                // CancelEdit and CommitEdit rely on IsAddingNewItem and IsEditingRowItem
-                CommandManager.InvalidateRequerySuggested();
+                        if (!rowEditEndingEventArgs.Cancel)
+                        {
+                            var bindingGroup = cell.RowOwner.BindingGroup;
+                            if (bindingGroup != null)
+                            {
+                                // CommitEdit will invoke the bindingGroup's ValidationRule's, so we need to make sure that all of the BindingExpressions
+                                // have already registered with the BindingGroup.  Synchronously flushing the Dispatcher to DataBind priority lets us ensure this.
+                                // Had we used BeginInvoke instead, IsEditing would not reflect the correct value.
+                                Dispatcher.Invoke(new DispatcherOperationCallback(DoNothing), DispatcherPriority.DataBind, bindingGroup);
+                                validationPassed = bindingGroup.CommitEdit();
+                            }
+
+                            HasRowValidationError = !validationPassed;
+                            if (validationPassed)
+                            {
+                                CommitRowItem();
+                            }
+                        }
+                    }
+
+                    if (validationPassed)
+                    {
+                        // Update the state of row editing
+                        UpdateRowEditing(cell);
+
+                        if (!cell.RowOwner.IsEditing)
+                        {
+                            ReleaseCellAutomationValueHolders();
+                        }
+                    }
+
+                    // CancelEdit and CommitEdit rely on IsAddingNewItem and IsEditingRowItem
+                    CommandManager.InvalidateRequerySuggested();
+                }
+            }
+            finally
+            {
+                ShimExecutingCommitEditCommand = false;
             }
 
             e.Handled = true;
