@@ -10,7 +10,11 @@ namespace System.Windows.Controls
     ///     A base class for specifying column definitions for certain standard
     ///     types that do not allow arbitrary templates.
     /// </summary>
+#if HAS_UNO
+    public abstract partial class DataGridBoundColumn : DataGridColumn
+#else
     public abstract class DataGridBoundColumn : DataGridColumn
+#endif
     {
         #region Constructors
 

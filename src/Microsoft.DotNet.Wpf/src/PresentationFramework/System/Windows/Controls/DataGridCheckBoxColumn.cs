@@ -29,12 +29,18 @@ namespace System.Windows.Controls
             {
                 if (_defaultElementStyle == null)
                 {
+#if HAS_UNO
+                    // Theme resource lookup, the Style(type, basedOn) ctor, and
+                    // UIElement.FocusableProperty aren't available under the Uno
+                    // shim; a bare style matches the old local shim's behavior.
+                    Style style = new Style(typeof(CheckBox));
+#else
                     Style baseStyle = null;
                     if (ThemeManager.IsFluentThemeEnabled)
                     {
                         baseStyle = Application.Current.FindResource(typeof(CheckBox)) as Style;
                     }
-                    
+
                     Style style = new Style(typeof(CheckBox), baseStyle);
 
                     // When not in edit mode, the end-user should not be able to toggle the state
@@ -44,6 +50,7 @@ namespace System.Windows.Controls
                     style.Setters.Add(new Setter(CheckBox.VerticalAlignmentProperty, VerticalAlignment.Top));
 
                     style.Seal();
+#endif
                     _defaultElementStyle = style;
                 }
 
@@ -61,18 +68,22 @@ namespace System.Windows.Controls
             {
                 if (_defaultEditingElementStyle == null)
                 {
+#if HAS_UNO
+                    Style style = new Style(typeof(CheckBox));
+#else
                     Style baseStyle = null;
                     if (ThemeManager.IsFluentThemeEnabled)
                     {
                         baseStyle = Application.Current.FindResource(typeof(CheckBox)) as Style;
                     }
-                    
+
                     Style style = new Style(typeof(CheckBox), baseStyle);
 
                     style.Setters.Add(new Setter(CheckBox.HorizontalAlignmentProperty, HorizontalAlignment.Center));
                     style.Setters.Add(new Setter(CheckBox.VerticalAlignmentProperty, VerticalAlignment.Top));
 
                     style.Seal();
+#endif
                     _defaultEditingElementStyle = style;
                 }
 

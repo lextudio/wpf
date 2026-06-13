@@ -295,7 +295,7 @@ namespace System.Windows.Controls
         public static readonly DependencyProperty FontFamilyProperty =
                 TextElement.FontFamilyProperty.AddOwner(
                         typeof(DataGridTextColumn),
-                        new FrameworkPropertyMetadata(SystemFonts.MessageFontFamily, FrameworkPropertyMetadataOptions.Inherits, DataGridColumn.NotifyPropertyChangeForRefreshContent));
+                        new FrameworkPropertyMetadata(SystemFonts.MessageFontFamily, FrameworkPropertyMetadataOptions.Inherits, (System.Windows.PropertyChangedCallback)DataGridColumn.NotifyPropertyChangeForRefreshContent));
 
         /// <summary>
         ///     The font family of the desired font.
@@ -316,7 +316,7 @@ namespace System.Windows.Controls
         public static readonly DependencyProperty FontSizeProperty =
                 TextElement.FontSizeProperty.AddOwner(
                         typeof(DataGridTextColumn),
-                        new FrameworkPropertyMetadata(SystemFonts.ThemeMessageFontSize, FrameworkPropertyMetadataOptions.Inherits, DataGridColumn.NotifyPropertyChangeForRefreshContent));
+                        new FrameworkPropertyMetadata(SystemFonts.ThemeMessageFontSize, FrameworkPropertyMetadataOptions.Inherits, (System.Windows.PropertyChangedCallback)DataGridColumn.NotifyPropertyChangeForRefreshContent));
 
         /// <summary>
         ///     The size of the desired font.
@@ -339,7 +339,7 @@ namespace System.Windows.Controls
         public static readonly DependencyProperty FontStyleProperty =
                 TextElement.FontStyleProperty.AddOwner(
                         typeof(DataGridTextColumn),
-                        new FrameworkPropertyMetadata(SystemFonts.MessageFontStyle, FrameworkPropertyMetadataOptions.Inherits, DataGridColumn.NotifyPropertyChangeForRefreshContent));
+                        new FrameworkPropertyMetadata(SystemFonts.MessageFontStyle, FrameworkPropertyMetadataOptions.Inherits, (System.Windows.PropertyChangedCallback)DataGridColumn.NotifyPropertyChangeForRefreshContent));
 
         /// <summary>
         ///     The style of the desired font.
@@ -360,7 +360,7 @@ namespace System.Windows.Controls
         public static readonly DependencyProperty FontWeightProperty =
                 TextElement.FontWeightProperty.AddOwner(
                         typeof(DataGridTextColumn),
-                        new FrameworkPropertyMetadata(SystemFonts.MessageFontWeight, FrameworkPropertyMetadataOptions.Inherits, DataGridColumn.NotifyPropertyChangeForRefreshContent));
+                        new FrameworkPropertyMetadata(SystemFonts.MessageFontWeight, FrameworkPropertyMetadataOptions.Inherits, (System.Windows.PropertyChangedCallback)DataGridColumn.NotifyPropertyChangeForRefreshContent));
 
         /// <summary>
         ///     The weight or thickness of the desired font.
@@ -381,7 +381,7 @@ namespace System.Windows.Controls
         public static readonly DependencyProperty ForegroundProperty =
                 TextElement.ForegroundProperty.AddOwner(
                         typeof(DataGridTextColumn),
-                        new FrameworkPropertyMetadata(SystemColors.ControlTextBrush, FrameworkPropertyMetadataOptions.Inherits, DataGridColumn.NotifyPropertyChangeForRefreshContent));
+                        new FrameworkPropertyMetadata(SystemColors.ControlTextBrush, FrameworkPropertyMetadataOptions.Inherits, (System.Windows.PropertyChangedCallback)DataGridColumn.NotifyPropertyChangeForRefreshContent));
 
         /// <summary>
         ///     An brush that describes the foreground color.

@@ -364,8 +364,17 @@ namespace System.Windows.Controls
         /// <summary>
         ///     The DependencyProperty for ItemsSource.
         /// </summary>
+#if HAS_UNO
+        // AddOwner would reuse WinUI's ItemsControl.ItemsSource DP, which throws
+        // when set on a column (not an ItemsControl). Register an independent DP;
+        // SyncColumnProperty copies its value onto the generated ComboBox.
+        public static readonly DependencyProperty ItemsSourceProperty =
+            DependencyProperty.Register("ItemsSource", typeof(IEnumerable), typeof(DataGridComboBoxColumn),
+                new FrameworkPropertyMetadata(null, (System.Windows.PropertyChangedCallback)DataGridColumn.NotifyPropertyChangeForRefreshContent));
+#else
         public static readonly DependencyProperty ItemsSourceProperty =
             ComboBox.ItemsSourceProperty.AddOwner(typeof(DataGridComboBoxColumn), new FrameworkPropertyMetadata(null, DataGridColumn.NotifyPropertyChangeForRefreshContent));
+#endif
 
         /// <summary>
         ///     DisplayMemberPath is a simple way to define a default template
@@ -381,8 +390,14 @@ namespace System.Windows.Controls
         /// <summary>
         ///     The DependencyProperty for the DisplayMemberPath property.
         /// </summary>
+#if HAS_UNO
+        public static readonly DependencyProperty DisplayMemberPathProperty =
+                DependencyProperty.Register("DisplayMemberPath", typeof(string), typeof(DataGridComboBoxColumn),
+                    new FrameworkPropertyMetadata(string.Empty, (System.Windows.PropertyChangedCallback)DataGridColumn.NotifyPropertyChangeForRefreshContent));
+#else
         public static readonly DependencyProperty DisplayMemberPathProperty =
                 ComboBox.DisplayMemberPathProperty.AddOwner(typeof(DataGridComboBoxColumn), new FrameworkPropertyMetadata(string.Empty, DataGridColumn.NotifyPropertyChangeForRefreshContent));
+#endif
 
         /// <summary>
         ///  The path used to retrieve the SelectedValue from the SelectedItem
@@ -396,8 +411,14 @@ namespace System.Windows.Controls
         /// <summary>
         ///     SelectedValuePath DependencyProperty
         /// </summary>
+#if HAS_UNO
+        public static readonly DependencyProperty SelectedValuePathProperty =
+                DependencyProperty.Register("SelectedValuePath", typeof(string), typeof(DataGridComboBoxColumn),
+                    new FrameworkPropertyMetadata(string.Empty, (System.Windows.PropertyChangedCallback)DataGridColumn.NotifyPropertyChangeForRefreshContent));
+#else
         public static readonly DependencyProperty SelectedValuePathProperty =
                 ComboBox.SelectedValuePathProperty.AddOwner(typeof(DataGridComboBoxColumn), new FrameworkPropertyMetadata(string.Empty, DataGridColumn.NotifyPropertyChangeForRefreshContent));
+#endif
 
         #endregion
 
@@ -556,13 +577,17 @@ namespace System.Windows.Controls
         /// <param name="uneditedValue">The original, unedited value of the cell.</param>
         protected override void CancelCellEdit(FrameworkElement editingElement, object uneditedValue)
         {
+#if !HAS_UNO
+            // ComboBox.EditableTextBoxSite has no WinUI equivalent; the body only
+            // caches FlowDirection (a no-op in the shim), so it is skipped.
             ComboBox cb = editingElement as ComboBox;
             if (cb != null && cb.EditableTextBoxSite != null)
             {
                 DataGridHelper.CacheFlowDirection(cb.EditableTextBoxSite, cb.Parent as DataGridCell);
                 DataGridHelper.CacheFlowDirection(cb, cb.Parent as DataGridCell);
             }
-            
+#endif
+
             base.CancelCellEdit(editingElement, uneditedValue);
         }
 
@@ -573,12 +598,14 @@ namespace System.Windows.Controls
         /// <returns>false if there is a validation error. true otherwise.</returns>
         protected override bool CommitCellEdit(FrameworkElement editingElement)
         {
+#if !HAS_UNO
             ComboBox cb = editingElement as ComboBox;
             if (cb != null && cb.EditableTextBoxSite != null)
             {
                 DataGridHelper.CacheFlowDirection(cb.EditableTextBoxSite, cb.Parent as DataGridCell);
                 DataGridHelper.CacheFlowDirection(cb, cb.Parent as DataGridCell);
             }
+#endif
 
             return base.CommitCellEdit(editingElement);
         }
