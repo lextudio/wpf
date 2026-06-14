@@ -870,9 +870,16 @@ namespace System.Windows.Controls
         /// <param name="item">The data item that the container represented.</param>
         protected override void ClearContainerForItemOverride(DependencyObject element, object item)
         {
+            DataGridRow row = (DataGridRow)element;
+#if HAS_UNO
+            if (GetTemplateChild("PART_ShimRowsHost") is Microsoft.UI.Xaml.Controls.Panel shimRowsHost &&
+                shimRowsHost.Children.Contains(row))
+            {
+                return;
+            }
+#endif
             base.ClearContainerForItemOverride(element, item);
 
-            DataGridRow row = (DataGridRow)element;
             if (row.DataGridOwner == this)
             {
                 row.Tracker.StopTracking(ref _rowTrackingRoot);

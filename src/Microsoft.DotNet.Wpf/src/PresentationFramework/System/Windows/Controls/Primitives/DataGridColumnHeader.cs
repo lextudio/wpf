@@ -21,7 +21,6 @@ namespace System.Windows.Controls.Primitives
     {
         #region Constructors
 
-#if !HAS_UNO
         static DataGridColumnHeader()
         {
             DefaultStyleKeyProperty.OverrideMetadata(typeof(DataGridColumnHeader), new FrameworkPropertyMetadata(typeof(DataGridColumnHeader)));
@@ -37,7 +36,6 @@ namespace System.Windows.Controls.Primitives
             ClipProperty.OverrideMetadata(typeof(DataGridColumnHeader), new FrameworkPropertyMetadata(null, OnCoerceClip));
             AutomationProperties.IsOffscreenBehaviorProperty.OverrideMetadata(typeof(DataGridColumnHeader), new FrameworkPropertyMetadata(IsOffscreenBehavior.FromClip));
         }
-#endif
 
         /// <summary>
         ///     Instantiates a new instance of this class.
@@ -54,7 +52,6 @@ namespace System.Windows.Controls.Primitives
         /// <summary>
         ///     The Column associated with this DataGridColumnHeader.
         /// </summary>
-#if !HAS_UNO
         public DataGridColumn Column
         {
             get
@@ -62,7 +59,6 @@ namespace System.Windows.Controls.Primitives
                 return _column;
             }
         }
-#endif
 
         /// <summary>
         ///     Property that indicates the brush to use when drawing seperators between headers.
@@ -101,7 +97,6 @@ namespace System.Windows.Controls.Primitives
         /// <summary>
         /// Prepares a column header to be used.  Sets up the association between the column header and its column.
         /// </summary>
-#if !HAS_UNO
         internal void PrepareColumnHeader(object item, DataGridColumn column)
         {
             Debug.Assert(column != null, "This header must have been generated with for a particular column");
@@ -122,7 +117,6 @@ namespace System.Windows.Controls.Primitives
             CoerceValue(ClipProperty);
             CoerceValue(DisplayIndexProperty);
         }
-#endif
 
         internal void ClearHeader()
         {
@@ -140,7 +134,6 @@ namespace System.Windows.Controls.Primitives
         #endregion
 
         #region Resize Gripper
-#if !HAS_UNO
         /// <summary>
         /// DependencyPropertyKey for DisplayIndex property
         /// </summary>
@@ -163,7 +156,6 @@ namespace System.Windows.Controls.Primitives
         {
             get { return (int)GetValue(DisplayIndexProperty); }
         }
-#endif
 
         /// <summary>
         /// Coercion callback for DisplayIndex property
@@ -187,7 +179,6 @@ namespace System.Windows.Controls.Primitives
         /// </summary>
         /// <param name="d"></param>
         /// <param name="e"></param>
-#if !HAS_UNO
         private static void OnDisplayIndexChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             DataGridColumnHeader header = (DataGridColumnHeader)d;
@@ -203,7 +194,6 @@ namespace System.Windows.Controls.Primitives
                 }
             }
         }
-#endif
 
         /// <summary>
         /// Override for <see cref="System.Windows.FrameworkElement.OnApplyTemplate">FrameworkElement.OnApplyTemplate</see>
@@ -211,9 +201,7 @@ namespace System.Windows.Controls.Primitives
         protected override void OnApplyTemplate()
         {
             base.OnApplyTemplate();
-#if !HAS_UNO
             HookupGripperEvents();
-#endif
         }
 
         /// <summary>
@@ -232,7 +220,6 @@ namespace System.Windows.Controls.Primitives
         /// We resize a column by grabbing the gripper to the right; the leftmost gripper thus adjusts the width of
         /// the column to its left.
         /// </summary>
-#if !HAS_UNO
         private void HookupGripperEvents()
         {
             UnhookGripperEvents();
@@ -378,7 +365,6 @@ namespace System.Windows.Controls.Primitives
         {
             get { return Column != null ? Column.ActualWidth : ActualWidth; }
         }
-#endif
 
         #endregion
 
@@ -395,7 +381,6 @@ namespace System.Windows.Controls.Primitives
         /// <summary>
         ///     Notification for column header-related DependencyProperty changes from the grid or from columns.
         /// </summary>
-#if !HAS_UNO
         internal void NotifyPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             DataGridColumn column = d as DataGridColumn;
@@ -450,10 +435,18 @@ namespace System.Windows.Controls.Primitives
             {
                 CoerceValue(SortDirectionProperty);
             }
+#if HAS_UNO
+            else if (e.Property == DataGridColumn.IsFrozenProperty || e.Property == DataGrid.FrozenColumnCountProperty)
+            {
+                CoerceValue(IsFrozenProperty);
+                ApplyShimFrozenState();
+            }
+#else
             else if (e.Property == DataGridColumn.IsFrozenProperty)
             {
                 CoerceValue(IsFrozenProperty);
             }
+#endif
             else if (e.Property == DataGridColumn.CanUserResizeProperty)
             {
                 OnCanUserResizeChanged();
@@ -463,9 +456,7 @@ namespace System.Windows.Controls.Primitives
                 OnColumnVisibilityChanged(e);
             }
         }
-#endif
 
-#if !HAS_UNO
         private void OnCanUserResizeColumnsChanged()
         {
             Debug.Assert(Column != null, "column can't be null if we got a notification for this property change");
@@ -593,12 +584,10 @@ namespace System.Windows.Controls.Primitives
                 }
             }
         }
-#endif
 
         #endregion
 
         #region Style and Template Coercion callbacks
-#if !HAS_UNO
 
         /// <summary>
         ///     Coerces the Content property.  We're choosing a value between Column.Header and the Content property on ColumnHeader.
@@ -701,7 +690,6 @@ namespace System.Windows.Controls.Primitives
                 DataGrid.ColumnHeaderStyleProperty);
         }
 
-#endif
         #endregion
 
         #region Auto Sort
@@ -732,7 +720,6 @@ namespace System.Windows.Controls.Primitives
         /// <summary>
         /// DependencyPropertyKey for SortDirection property
         /// </summary>
-#if !HAS_UNO
         private static readonly DependencyPropertyKey SortDirectionPropertyKey =
                 DependencyProperty.RegisterReadOnly(
                         "SortDirection",
@@ -744,9 +731,7 @@ namespace System.Windows.Controls.Primitives
         ///     The DependencyProperty for the SortDirection property.
         /// </summary>
         public static readonly DependencyProperty SortDirectionProperty = SortDirectionPropertyKey.DependencyProperty;
-#endif
 
-#if !HAS_UNO
         /// <summary>
         /// The property for current sort direction of the column of this header
         /// </summary>
@@ -754,7 +739,6 @@ namespace System.Windows.Controls.Primitives
         {
             get { return (Nullable<ListSortDirection>)GetValue(SortDirectionProperty); }
         }
-#endif
 
         /// <summary>
         /// The override of ButtonBase.OnClick.
@@ -764,13 +748,11 @@ namespace System.Windows.Controls.Primitives
         {
             if (!SuppressClickEvent)
             {
-#if !HAS_UNO
                 if (AutomationPeer.ListenerExists(AutomationEvents.InvokePatternOnInvoked))
                 {
                     AutomationPeer peer = UIElementAutomationPeer.CreatePeerForElement(this);
                     peer?.RaiseAutomationEvent(AutomationEvents.InvokePatternOnInvoked);
                 }
-#endif
 
                 base.OnClick();
 
@@ -850,12 +832,10 @@ namespace System.Windows.Controls.Primitives
 
         #region Automation
 
-#if !HAS_UNO
         protected override System.Windows.Automation.Peers.AutomationPeer OnCreateAutomationPeer()
         {
             return new System.Windows.Automation.Peers.DataGridColumnHeaderAutomationPeer(this);
         }
-#endif
 
         // Called from DataGridColumnHeaderAutomationPeer
         internal void Invoke()
@@ -910,7 +890,6 @@ namespace System.Windows.Controls.Primitives
         /// Coercion call back for clip property which ensures that the header overlapping with frozen
         /// column gets clipped appropriately.
         /// </summary>
-#if !HAS_UNO
         private static object OnCoerceClip(DependencyObject d, object baseValue)
         {
             DataGridColumnHeader header = (DataGridColumnHeader)d;
@@ -928,7 +907,6 @@ namespace System.Windows.Controls.Primitives
 
             return geometry;
         }
-#endif
 
         #endregion
 
@@ -964,7 +942,6 @@ namespace System.Windows.Controls.Primitives
             }
         }
 
-#if !HAS_UNO
         protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
         {
             base.OnMouseLeftButtonDown(e);
@@ -1046,12 +1023,10 @@ namespace System.Windows.Controls.Primitives
                 return SystemResourceKey.DataGridColumnHeaderColumnFloatingHeaderStyleKey;
             }
         }
-#endif
 
         #endregion
 
         #region VSM
-#if !HAS_UNO
         internal override void ChangeVisualState(bool useTransitions)
         {
             // Common States
@@ -1091,7 +1066,6 @@ namespace System.Windows.Controls.Primitives
             // compatible with them.
             ChangeValidationVisualState(useTransitions);
         }
-#endif
         #endregion
 
 
@@ -1105,7 +1079,6 @@ namespace System.Windows.Controls.Primitives
             }
         }
 
-#if !HAS_UNO
         private Panel ParentPanel
         {
             get
@@ -1141,7 +1114,6 @@ namespace System.Windows.Controls.Primitives
                 return null;
             }
         }
-#endif
 
         #endregion
 
