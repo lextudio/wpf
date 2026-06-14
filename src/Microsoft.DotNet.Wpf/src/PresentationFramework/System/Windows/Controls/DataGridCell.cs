@@ -15,14 +15,11 @@ namespace System.Windows.Controls
     /// </summary>
     public partial class DataGridCell : ContentControl, IProvideDataGridColumn
     {
-#if !HAS_UNO
         private static readonly bool IsDataGridKeyboardSortDisabled;
         private static readonly bool OptOutOfGridColumnResizeUsingKeyboard;
-#endif
 
         #region Constructors
 
-#if !HAS_UNO
         /// <summary>
         ///     Instantiates global information.
         /// </summary>
@@ -46,7 +43,6 @@ namespace System.Windows.Controls
             AppContext.TryGetSwitch("System.Windows.Controls.DisableDataGridKeyboardSort", out IsDataGridKeyboardSortDisabled);
             AppContext.TryGetSwitch("System.Windows.Controls.OptOutOfGridColumnResizeUsingKeyboard", out OptOutOfGridColumnResizeUsingKeyboard);
         }
-#endif
 
         /// <summary>
         ///     Instantiates a new instance of this class.
@@ -55,27 +51,22 @@ namespace System.Windows.Controls
         {
             _tracker = new ContainerTracking<DataGridCell>(this);
 #if HAS_UNO
-            RegisterPropertyChangedCallback(IsSelectedProperty, (sender, dp) =>
-            {
-                var cell = (DataGridCell)sender;
-                cell.Background = cell.IsSelected
-                    ? new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                        global::Windows.UI.Color.FromArgb(0xFF, 0x9C, 0xC9, 0xF5))
-                    : null;
-            });
+            OnInitializedShim();
 #endif
         }
+
+        // Hook for Uno-specific construction work. Implemented in the platform
+        // partial; under WPF the unimplemented partial method is elided entirely.
+        partial void OnInitializedShim();
 
         #endregion
 
         #region Automation
 
-#if !HAS_UNO
         protected override System.Windows.Automation.Peers.AutomationPeer OnCreateAutomationPeer()
         {
             return new System.Windows.Automation.Peers.DataGridCellAutomationPeer(this);
         }
-#endif
 
         #endregion
 
@@ -208,18 +199,15 @@ namespace System.Windows.Controls
         /// <param name="newColumn">The new column definition.</param>
         protected virtual void OnColumnChanged(DataGridColumn oldColumn, DataGridColumn newColumn)
         {
-#if !HAS_UNO
             Content = null;
             DataGridHelper.TransferProperty(this, StyleProperty);
             DataGridHelper.TransferProperty(this, IsReadOnlyProperty);
-#endif
         }
 
         #endregion
 
         #region Notification Propagation
 
-#if !HAS_UNO
         /// <summary>
         ///     Notifies the Cell of a property change.
         /// </summary>
@@ -281,25 +269,25 @@ namespace System.Windows.Controls
                 {
                     UpdateVisualState();
                 }
+#if HAS_UNO
+                else if (e.Property == DataGrid.FrozenColumnCountProperty || e.Property == DataGridColumn.IsFrozenProperty)
+                {
+                    ApplyShimFrozenState();
+                }
+#endif
             }
-
+#if HAS_UNO
+            if (DataGridHelper.ShouldNotifyCellsPresenter(target) && e.Property == DataGrid.FrozenColumnCountProperty)
+            {
+                ApplyShimFrozenState();
+            }
+#endif
             // All the notifications which needs forward to columns
             if (DataGridHelper.ShouldRefreshCellContent(target))
             {
-                if (column != null && NeedsVisualTree)
-                {
-                    if (!string.IsNullOrEmpty(propertyName))
-                    {
-                        column.RefreshCellContent(this, propertyName);
-                    }
-                    else if (e.Property != null)
-                    {
-                        column.RefreshCellContent(this, e.Property.Name);
-                    }
-                }
+                BuildVisualTree();
             }
         }
-#endif
 
         #endregion
 
@@ -501,12 +489,17 @@ namespace System.Windows.Controls
             UpdateVisualState();
         }
 
-#if !HAS_UNO
         internal void NotifyCurrentCellContainerChanged()
         {
             UpdateVisualState();
-        }
+#if HAS_UNO
+            OnCurrentCellContainerChangedShim();
 #endif
+        }
+
+        // Hook for Uno-specific current-cell visuals (focus border vs. grid lines).
+        // Elided under WPF where UpdateVisualState drives the template states.
+        partial void OnCurrentCellContainerChangedShim();
 
         /// <summary>
         ///     Whether the cell is the current cell.
@@ -902,7 +895,6 @@ namespace System.Windows.Controls
         #endregion
 
         #region Input
-#if !HAS_UNO
 
         private static void OnAnyMouseLeftButtonDownThunk(object sender, MouseButtonEventArgs e)
         {
@@ -1051,7 +1043,6 @@ namespace System.Windows.Controls
             column?.OnInput(e);
         }
 
-#endif
         #endregion
 
         #region Frozen Columns
@@ -1082,7 +1073,6 @@ namespace System.Windows.Controls
 
         #region Helpers
 
-#if !HAS_UNO
         internal DataGrid DataGridOwner
         {
             get
@@ -1101,7 +1091,6 @@ namespace System.Windows.Controls
                 return null;
             }
         }
-#endif
 
         private Panel ParentPanel
         {
@@ -1111,7 +1100,6 @@ namespace System.Windows.Controls
             }
         }
 
-#if !HAS_UNO
         internal DataGridRow RowOwner
         {
             get { return _owner; }
@@ -1130,19 +1118,18 @@ namespace System.Windows.Controls
                 return DataContext;
             }
         }
-#endif
 
-#if HAS_UNO
-        private DataGridCellsPresenter CellsPresenter => null;
-#else
         private DataGridCellsPresenter CellsPresenter
         {
             get
             {
+                // Cast through object so this compiles under both type hierarchies:
+                // upstream WPF has DataGridCellsPresenter : ItemsControl (direct cast
+                // valid), while the Uno shim has it deriving from Panel (no conversion
+                // from the ItemsControl returned here, so the runtime check yields null).
                 return ItemsControl.ItemsControlFromItemContainer(this) as DataGridCellsPresenter;
             }
         }
-#endif
 
         private bool NeedsVisualTree
         {
@@ -1155,15 +1142,13 @@ namespace System.Windows.Controls
         #endregion
 
         #region Data
-#if !HAS_UNO
 
-        private DataGridRow _owner;
         private ContainerTracking<DataGridCell> _tracker;
         private bool _syncingIsSelected;                    // Used to prevent unnecessary notifications
+        private DataGridRow _owner;
         private const double ColumnWidthStepSize = 10d;
         private const ModifierKeys ModifierMask = ModifierKeys.Alt | ModifierKeys.Control | ModifierKeys.Shift | ModifierKeys.Windows;
 
-#endif
         #endregion
     }
 }
