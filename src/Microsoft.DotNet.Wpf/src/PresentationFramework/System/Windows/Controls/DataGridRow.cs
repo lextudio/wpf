@@ -22,10 +22,10 @@ namespace System.Windows.Controls
     ///     The data item for the row is added n times to the row's Items collection,
     ///     where n is the number of columns in the DataGrid.
     /// </summary>
-    public class DataGridRow : Control
+    public partial class DataGridRow : Control
     {
         #region Constants
-
+#if !HAS_UNO
         private const byte DATAGRIDROW_stateMouseOverCode = 0;
         private const byte DATAGRIDROW_stateMouseOverEditingCode = 1;
         private const byte DATAGRIDROW_stateMouseOverEditingFocusedCode = 2;
@@ -83,11 +83,13 @@ namespace System.Windows.Controls
             VisualStates.DATAGRIDROW_stateSelected,
             VisualStates.DATAGRIDROW_stateSelectedFocused
         };
+#endif
 
         #endregion Constants
 
         #region Constructors
 
+#if !HAS_UNO
         /// <summary>
         ///     Instantiates global information.
         /// </summary>
@@ -106,6 +108,7 @@ namespace System.Windows.Controls
             VirtualizingPanel.ShouldCacheContainerSizeProperty.OverrideMetadata(typeof(DataGridRow), new FrameworkPropertyMetadata(null, new CoerceValueCallback(OnCoerceShouldCacheContainerSize)));
             AutomationProperties.IsOffscreenBehaviorProperty.OverrideMetadata(typeof(DataGridRow), new FrameworkPropertyMetadata(IsOffscreenBehavior.FromClip));
         }
+#endif
 
         /// <summary>
         ///     Instantiates a new instance of this class.
@@ -142,14 +145,16 @@ namespace System.Windows.Controls
         /// <param name="newItem">The new value of Item.</param>
         protected virtual void OnItemChanged(object oldItem, object newItem)
         {
+#if !HAS_UNO
             DataGridCellsPresenter cellsPresenter = CellsPresenter;
             cellsPresenter?.Item = newItem;
+#endif
         }
 
         #endregion
 
         #region Template
-
+#if !HAS_UNO
         /// <summary>
         ///     A template that will generate the panel that arranges the cells in this row.
         /// </summary>
@@ -177,10 +182,11 @@ namespace System.Windows.Controls
             DetailsPresenter = null;
         }
 
+#endif
         #endregion
 
         #region Visual States
-
+#if !HAS_UNO
         private bool IsDataGridKeyboardFocusWithin
         {
             get
@@ -252,10 +258,11 @@ namespace System.Windows.Controls
 
             base.ChangeVisualState(useTransitions);
         }
-
+#endif
         #endregion
 
         #region Row Header
+#if !HAS_UNO
 
         /// <summary>
         ///     The object representing the Row Header.
@@ -340,10 +347,11 @@ namespace System.Windows.Controls
         /// </summary>
         public static readonly DependencyProperty ValidationErrorTemplateProperty =
             DependencyProperty.Register("ValidationErrorTemplate", typeof(ControlTemplate), typeof(DataGridRow), new FrameworkPropertyMetadata(null, OnNotifyRowPropertyChanged, OnCoerceValidationErrorTemplate));
-
+#endif
         #endregion
 
         #region Row Details
+#if !HAS_UNO
 
         /// <summary>
         ///     The object representing the Row Details template.
@@ -375,21 +383,6 @@ namespace System.Windows.Controls
         public static readonly DependencyProperty DetailsTemplateSelectorProperty =
             DependencyProperty.Register("DetailsTemplateSelector", typeof(DataTemplateSelector), typeof(DataGridRow), new FrameworkPropertyMetadata(null, OnNotifyDetailsTemplatePropertyChanged, OnCoerceDetailsTemplateSelector));
 
-        /// <summary>
-        ///     The Visibility of the Details presenter
-        /// </summary>
-        public Visibility DetailsVisibility
-        {
-            get { return (Visibility)GetValue(DetailsVisibilityProperty); }
-            set { SetValue(DetailsVisibilityProperty, value); }
-        }
-
-        /// <summary>
-        ///     The DependencyProperty for the DetailsVisibility property.
-        /// </summary>
-        public static readonly DependencyProperty DetailsVisibilityProperty =
-            DependencyProperty.Register("DetailsVisibility", typeof(Visibility), typeof(DataGridRow), new FrameworkPropertyMetadata(Visibility.Collapsed, OnNotifyDetailsVisibilityChanged, OnCoerceDetailsVisibility));
-
         internal bool DetailsLoaded
         {
             get
@@ -402,11 +395,12 @@ namespace System.Windows.Controls
                 _detailsLoaded = value;
             }
         }
+#endif
 
         #endregion
 
         #region Row Generation
-
+#if !HAS_UNO
         /// <summary>
         /// We can't override the metadata for a read only property, so we'll get the property change notification for AlternationIndexProperty this way instead.
         /// </summary>
@@ -509,6 +503,7 @@ namespace System.Windows.Controls
                 objectWithProperty.SetValue(property, value);
             }
         }
+#endif
 
         /// <summary>
         ///     Used by the DataGrid owner to send notifications to the row container.
@@ -521,7 +516,7 @@ namespace System.Windows.Controls
         #endregion
 
         #region Row Resizing
-
+#if !HAS_UNO
         internal void OnRowResizeStarted()
         {
             var cellsPresenter = CellsPresenter;
@@ -574,11 +569,12 @@ namespace System.Windows.Controls
                 _owner?.ItemAttachedStorage.ClearValue(Item, DataGridCellsPresenter.HeightProperty);
             }
         }
+#endif
 
         #endregion
 
         #region Columns Notification
-
+#if !HAS_UNO
         /// <summary>
         ///     Notification from the DataGrid that the columns collection has changed.
         /// </summary>
@@ -589,10 +585,12 @@ namespace System.Windows.Controls
             DataGridCellsPresenter cellsPresenter = CellsPresenter;
             cellsPresenter?.OnColumnsChanged(columns, e);
         }
+#endif
 
         #endregion
 
         #region Property Coercion
+#if !HAS_UNO
 
         private static object OnCoerceHeaderStyle(DependencyObject d, object baseValue)
         {
@@ -756,6 +754,7 @@ namespace System.Windows.Controls
                 return baseValue;
             }
         }
+#endif
 
         #endregion
 
@@ -771,6 +770,7 @@ namespace System.Windows.Controls
             (d as DataGridRow).NotifyPropertyChanged(d, e, DataGridNotificationTarget.Rows | DataGridNotificationTarget.RowHeaders);
         }
 
+#if !HAS_UNO
         private static void OnNotifyDetailsTemplatePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             DataGridRow row = (DataGridRow)d;
@@ -815,10 +815,12 @@ namespace System.Windows.Controls
 
             return null;
         }
+#endif
 
         /// <summary>
         ///     Set by the CellsPresenter when it is created.  Used by the Row to send down property change notifications.
         /// </summary>
+#if !HAS_UNO
         internal DataGridCellsPresenter CellsPresenter
         {
             get { return _cellsPresenter; }
@@ -991,10 +993,12 @@ namespace System.Windows.Controls
 
             RowHeader?.SyncProperties();
         }
+#endif
 
         #endregion
 
         #region Alternation
+#if !HAS_UNO
 
         /// <summary>
         ///     AlternationIndex is set on containers generated for an ItemsControl, when
@@ -1017,6 +1021,7 @@ namespace System.Windows.Controls
         ///     Same as ItemsControl.AlternationIndexProperty.
         /// </remarks>
         public static readonly DependencyProperty AlternationIndexProperty = ItemsControl.AlternationIndexProperty.AddOwner(typeof(DataGridRow));
+#endif
 
         #endregion
 
@@ -1049,11 +1054,14 @@ namespace System.Windows.Controls
             DataGridRow row = (DataGridRow)sender;
             bool isSelected = (bool)e.NewValue;
 
+#if !HAS_UNO
             if (isSelected && !row.IsSelectable)
             {
                 throw new InvalidOperationException(SR.DataGridRow_CannotSelectRowWhenCells);
             }
+#endif
 
+#if !HAS_UNO
             DataGrid grid = row.DataGridOwner;
             if (grid != null && row.DataContext != null)
             {
@@ -1067,19 +1075,22 @@ namespace System.Windows.Controls
                             isSelected);
                 }
             }
+#endif
 
             // Update the header's IsRowSelected property
-            row.NotifyPropertyChanged(row, e, DataGridNotificationTarget.Rows | DataGridNotificationTarget.RowHeaders);
+            row.NotifyPropertyChanged(row, string.Empty, e, DataGridNotificationTarget.Rows | DataGridNotificationTarget.RowHeaders);
 
             // This will raise the appropriate selection event, which will
             // bubble to the DataGrid. The base class Selector code will listen
             // for these events and will update SelectedItems as necessary.
             row.RaiseSelectionChangedEvent(isSelected);
 
+#if !HAS_UNO
             row.UpdateVisualState();
+#endif
 
             // Update the header's IsRowSelected property
-            row.NotifyPropertyChanged(row, e, DataGridNotificationTarget.Rows | DataGridNotificationTarget.RowHeaders);
+            row.NotifyPropertyChanged(row, string.Empty, e, DataGridNotificationTarget.Rows | DataGridNotificationTarget.RowHeaders);
         }
 
         private void RaiseSelectionChangedEvent(bool isSelected)
@@ -1197,16 +1208,16 @@ namespace System.Windows.Controls
         #endregion
 
         #region Automation
-
+#if !HAS_UNO
         protected override System.Windows.Automation.Peers.AutomationPeer OnCreateAutomationPeer()
         {
             return new System.Windows.Automation.Peers.DataGridRowAutomationPeer(this);
         }
-
+#endif
         #endregion
 
         #region Column Virtualization
-
+#if !HAS_UNO
         /// <summary>
         ///     Method which tries to scroll a cell for given index into the scroll view
         /// </summary>
@@ -1216,11 +1227,11 @@ namespace System.Windows.Controls
             DataGridCellsPresenter cellsPresenter = CellsPresenter;
             cellsPresenter?.ScrollCellIntoView(index);
         }
-
+#endif
         #endregion
 
         #region Layout
-
+#if !HAS_UNO
         /// <summary>
         ///     Arrange
         /// </summary>
@@ -1231,7 +1242,7 @@ namespace System.Windows.Controls
 
             return base.ArrangeOverride(arrangeBounds);
         }
-
+#endif
         #endregion
 
         #region New Item
@@ -1261,7 +1272,7 @@ namespace System.Windows.Controls
         #endregion
 
         #region Helpers
-
+#if !HAS_UNO
         /// <summary>
         ///     Returns the index of this row within the DataGrid's list of item containers.
         /// </summary>
@@ -1279,6 +1290,7 @@ namespace System.Windows.Controls
 
             return -1;
         }
+#endif
 
         /// <summary>
         ///     Searchs up the visual parent chain from the given element until
@@ -1299,6 +1311,7 @@ namespace System.Windows.Controls
             get { return _owner; }
         }
 
+#if !HAS_UNO
         /// <summary>
         /// Returns true if the DetailsPresenter is supposed to draw gridlines for the row.  Only true
         /// if the DetailsPresenter hooked itself up properly to the Row.
@@ -1322,11 +1335,12 @@ namespace System.Windows.Controls
 
             return null;
         }
+#endif
 
         #endregion
 
         #region Data
-
+#if !HAS_UNO
         // Tracks whether row details have been displayed.
         //      true - row details template has been loaded and has rendered at least once
         //      false - row details template has either is unset, or has never been asked to render
@@ -1338,6 +1352,7 @@ namespace System.Windows.Controls
         private DataGridRowHeader _rowHeader;
         private ContainerTracking<DataGridRow> _tracker;
         private double _cellsPresenterResizeHeight;
+#endif
 
         #endregion
     }

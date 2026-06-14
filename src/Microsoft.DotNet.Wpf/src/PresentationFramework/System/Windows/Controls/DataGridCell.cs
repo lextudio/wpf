@@ -13,13 +13,16 @@ namespace System.Windows.Controls
     /// <summary>
     ///     A control for displaying a cell of the DataGrid.
     /// </summary>
-    public class DataGridCell : ContentControl, IProvideDataGridColumn
+    public partial class DataGridCell : ContentControl, IProvideDataGridColumn
     {
+#if !HAS_UNO
         private static readonly bool IsDataGridKeyboardSortDisabled;
         private static readonly bool OptOutOfGridColumnResizeUsingKeyboard;
+#endif
 
         #region Constructors
 
+#if !HAS_UNO
         /// <summary>
         ///     Instantiates global information.
         /// </summary>
@@ -31,7 +34,6 @@ namespace System.Windows.Controls
             KeyboardNavigation.TabNavigationProperty.OverrideMetadata(typeof(DataGridCell), new FrameworkPropertyMetadata(KeyboardNavigationMode.Local));
             AutomationProperties.IsOffscreenBehaviorProperty.OverrideMetadata(typeof(DataGridCell), new FrameworkPropertyMetadata(IsOffscreenBehavior.FromClip));
 
-            // Set SnapsToDevicePixels to true so that this element can draw grid lines.  The metadata options are so that the property value doesn't inherit down the tree from here.
             SnapsToDevicePixelsProperty.OverrideMetadata(typeof(DataGridCell), new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsArrange));
 
             EventManager.RegisterClassHandler(typeof(DataGridCell), MouseLeftButtonDownEvent, new MouseButtonEventHandler(OnAnyMouseLeftButtonDownThunk), true);
@@ -44,6 +46,7 @@ namespace System.Windows.Controls
             AppContext.TryGetSwitch("System.Windows.Controls.DisableDataGridKeyboardSort", out IsDataGridKeyboardSortDisabled);
             AppContext.TryGetSwitch("System.Windows.Controls.OptOutOfGridColumnResizeUsingKeyboard", out OptOutOfGridColumnResizeUsingKeyboard);
         }
+#endif
 
         /// <summary>
         ///     Instantiates a new instance of this class.
@@ -51,21 +54,34 @@ namespace System.Windows.Controls
         public DataGridCell()
         {
             _tracker = new ContainerTracking<DataGridCell>(this);
+#if HAS_UNO
+            RegisterPropertyChangedCallback(IsSelectedProperty, (sender, dp) =>
+            {
+                var cell = (DataGridCell)sender;
+                cell.Background = cell.IsSelected
+                    ? new Microsoft.UI.Xaml.Media.SolidColorBrush(
+                        global::Windows.UI.Color.FromArgb(0xFF, 0x9C, 0xC9, 0xF5))
+                    : null;
+            });
+#endif
         }
 
         #endregion
 
         #region Automation
 
+#if !HAS_UNO
         protected override System.Windows.Automation.Peers.AutomationPeer OnCreateAutomationPeer()
         {
             return new System.Windows.Automation.Peers.DataGridCellAutomationPeer(this);
         }
+#endif
 
         #endregion
 
         #region Cell Generation
 
+#if !HAS_UNO
         /// <summary>
         ///     Prepares a cell for use.
         /// </summary>
@@ -145,6 +161,7 @@ namespace System.Windows.Controls
         {
             get { return _tracker; }
         }
+#endif
 
         #endregion
 
@@ -156,7 +173,11 @@ namespace System.Windows.Controls
         public DataGridColumn Column
         {
             get { return (DataGridColumn)GetValue(ColumnProperty); }
+#if HAS_UNO
+            internal set { SetValue(ColumnProperty, value); }
+#else
             internal set { SetValue(ColumnPropertyKey, value); }
+#endif
         }
 
         /// <summary>
@@ -191,16 +212,18 @@ namespace System.Windows.Controls
         /// <param name="newColumn">The new column definition.</param>
         protected virtual void OnColumnChanged(DataGridColumn oldColumn, DataGridColumn newColumn)
         {
-            // We need to call BuildVisualTree after changing the column (PrepareCell does this).
+#if !HAS_UNO
             Content = null;
             DataGridHelper.TransferProperty(this, StyleProperty);
             DataGridHelper.TransferProperty(this, IsReadOnlyProperty);
+#endif
         }
 
         #endregion
 
         #region Notification Propagation
 
+#if !HAS_UNO
         /// <summary>
         ///     Notifies the Cell of a property change.
         /// </summary>
@@ -280,11 +303,13 @@ namespace System.Windows.Controls
                 }
             }
         }
+#endif
 
         #endregion
 
         #region Style
 
+#if !HAS_UNO
         private static object OnCoerceStyle(DependencyObject d, object baseValue)
         {
             var cell = d as DataGridCell;
@@ -297,11 +322,13 @@ namespace System.Windows.Controls
                 cell.DataGridOwner,
                 DataGrid.CellStyleProperty);
         }
+#endif
 
         #endregion
 
         #region Template
 
+#if !HAS_UNO
         internal override void ChangeVisualState(bool useTransitions)
         {
             if (DataGridOwner == null)
@@ -435,6 +462,7 @@ namespace System.Windows.Controls
                 }
             }
         }
+#endif
 
         #endregion
 
@@ -468,17 +496,22 @@ namespace System.Windows.Controls
         /// <param name="isEditing">The new value of IsEditing.</param>
         protected virtual void OnIsEditingChanged(bool isEditing)
         {
+#if !HAS_UNO
             if (IsKeyboardFocusWithin && !IsKeyboardFocused)
             {
                 // Keep focus on the cell when flipping modes
                 Focus();
             }
+#endif
 
             // If templates aren't being used, then a new visual tree needs to be built.
             BuildVisualTree();
+#if !HAS_UNO
             UpdateVisualState();
+#endif
         }
 
+#if !HAS_UNO
         internal void NotifyCurrentCellContainerChanged()
         {
             UpdateVisualState();
@@ -505,7 +538,9 @@ namespace System.Windows.Controls
                 return false;
             }
         }
+#endif
 
+#if !HAS_UNO
         /// <summary>
         ///     Whether the cell can be placed in edit mode.
         /// </summary>
@@ -564,7 +599,9 @@ namespace System.Windows.Controls
                 owner?.FocusedCell = cell;
             }
         }
+#endif
 
+#if !HAS_UNO
         internal void BeginEdit(RoutedEventArgs e)
         {
             Debug.Assert(!IsEditing, "Should not call BeginEdit when IsEditing is true.");
@@ -629,6 +666,7 @@ namespace System.Windows.Controls
                 return Content as FrameworkElement;
             }
         }
+#endif
 
         #endregion
 
@@ -653,6 +691,7 @@ namespace System.Windows.Controls
             DataGridCell cell = (DataGridCell)sender;
             bool isSelected = (bool)e.NewValue;
 
+#if !HAS_UNO
             // There is no reason to notify the DataGrid if IsSelected's value came
             // from the DataGrid.
             if (!cell._syncingIsSelected)
@@ -666,6 +705,7 @@ namespace System.Windows.Controls
 
             cell.RaiseSelectionChangedEvent(isSelected);
             cell.UpdateVisualState();
+#endif
         }
 
         /// <summary>
@@ -686,6 +726,7 @@ namespace System.Windows.Controls
             }
         }
 
+#if !HAS_UNO
         private void RaiseSelectionChangedEvent(bool isSelected)
         {
             if (isSelected)
@@ -757,10 +798,12 @@ namespace System.Windows.Controls
         {
             RaiseEvent(e);
         }
+#endif
 
         #endregion
 
         #region GridLines
+#if !HAS_UNO
 
         // Different parts of the DataGrid draw different pieces of the GridLines.
         // Cells draw a single line on their right side.
@@ -868,9 +911,11 @@ namespace System.Windows.Controls
             }
         }
 
+#endif
         #endregion
 
         #region Input
+#if !HAS_UNO
 
         private static void OnAnyMouseLeftButtonDownThunk(object sender, MouseButtonEventArgs e)
         {
@@ -1019,9 +1064,11 @@ namespace System.Windows.Controls
             column?.OnInput(e);
         }
 
+#endif
         #endregion
 
         #region Frozen Columns
+#if !HAS_UNO
 
         /// <summary>
         /// Coercion call back for clip property which ensures that the cell overlapping with frozen
@@ -1048,9 +1095,11 @@ namespace System.Windows.Controls
             return geometry;
         }
 
+#endif
         #endregion
 
         #region Helpers
+#if !HAS_UNO
 
         internal DataGrid DataGridOwner
         {
@@ -1114,9 +1163,11 @@ namespace System.Windows.Controls
             }
         }
 
+#endif
         #endregion
 
         #region Data
+#if !HAS_UNO
 
         private DataGridRow _owner;
         private ContainerTracking<DataGridCell> _tracker;
@@ -1124,6 +1175,7 @@ namespace System.Windows.Controls
         private const double ColumnWidthStepSize = 10d;
         private const ModifierKeys ModifierMask = ModifierKeys.Alt | ModifierKeys.Control | ModifierKeys.Shift | ModifierKeys.Windows;
 
+#endif
         #endregion
     }
 }
