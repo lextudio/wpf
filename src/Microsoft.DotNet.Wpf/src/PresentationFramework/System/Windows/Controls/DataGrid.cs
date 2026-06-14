@@ -76,9 +76,7 @@ namespace System.Windows.Controls
 
             EventManager.RegisterClassHandler(typeof(DataGrid), MouseUpEvent, new MouseButtonEventHandler(OnAnyMouseUpThunk), true);
 
-#if !HAS_UNO
             ControlsTraceLogger.AddControl(TelemetryControls.DataGrid);
-#endif
         }
 
         /// <summary>
@@ -1186,11 +1184,11 @@ namespace System.Windows.Controls
             if (row.DetailsVisibility == Visibility.Visible && row.DetailsPresenter != null)
             {
                 // Invoke LoadingRowDetails, but only after the details template is expanded (so DetailsElement will be available).
-#if HAS_UNO
+                // Use the instance Dispatcher (== CurrentDispatcher on the UI thread): the
+                // BeginInvoke(Delegate, DispatcherPriority, object) overload exists on both WPF's
+                // Dispatcher and the Uno shim, whereas the static Dispatcher.CurrentDispatcher does
+                // not resolve under Uno where an instance Dispatcher property shadows the type name.
                 Dispatcher.BeginInvoke(new DispatcherOperationCallback(DelayedOnLoadingRowDetails), DispatcherPriority.Loaded, row);
-#else
-                Dispatcher.CurrentDispatcher.BeginInvoke(new DispatcherOperationCallback(DelayedOnLoadingRowDetails), DispatcherPriority.Loaded, row);
-#endif
             }
         }
 
@@ -6776,12 +6774,10 @@ namespace System.Windows.Controls
 
         #region Automation
 
-#if !HAS_UNO // automation peers are not bridged yet
         protected override System.Windows.Automation.Peers.AutomationPeer OnCreateAutomationPeer()
         {
             return new System.Windows.Automation.Peers.DataGridAutomationPeer(this);
         }
-#endif
 
         private CellAutomationValueHolder GetCellAutomationValueHolder(object item, DataGridColumn column)
         {

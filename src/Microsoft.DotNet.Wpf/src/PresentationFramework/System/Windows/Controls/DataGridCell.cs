@@ -1127,7 +1127,7 @@ namespace System.Windows.Controls
                 // upstream WPF has DataGridCellsPresenter : ItemsControl (direct cast
                 // valid), while the Uno shim has it deriving from Panel (no conversion
                 // from the ItemsControl returned here, so the runtime check yields null).
-                return ItemsControl.ItemsControlFromItemContainer(this) as DataGridCellsPresenter;
+                return ItemsControl.ItemsControlFromItemContainer(this) as object as DataGridCellsPresenter;
             }
         }
 

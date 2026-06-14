@@ -14,7 +14,7 @@ namespace System.Windows.Controls.Primitives
     /// </summary>
     [TemplatePart(Name = "PART_TopHeaderGripper", Type = typeof(Thumb))]
     [TemplatePart(Name = "PART_BottomHeaderGripper", Type = typeof(Thumb))]
-    public class DataGridRowHeader : ButtonBase
+    public partial class DataGridRowHeader : ButtonBase
     {
         #region Constants
 
@@ -202,7 +202,11 @@ namespace System.Windows.Controls.Primitives
 
         #region Row Communication
 
+#if HAS_UNO
+        protected override void OnApplyTemplate()
+#else
         public override void OnApplyTemplate()
+#endif
         {
             base.OnApplyTemplate();
 

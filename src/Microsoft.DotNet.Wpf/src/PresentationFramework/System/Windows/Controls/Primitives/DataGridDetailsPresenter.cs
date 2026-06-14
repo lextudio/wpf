@@ -9,7 +9,7 @@ using System.Windows.Automation;
 
 namespace System.Windows.Controls.Primitives
 {
-    public class DataGridDetailsPresenter : ContentPresenter
+    public partial class DataGridDetailsPresenter : ContentPresenter
     {
         static DataGridDetailsPresenter()
         {
@@ -189,6 +189,7 @@ namespace System.Windows.Controls.Primitives
         #endregion 
 
         #region GridLines
+#if !HAS_UNO
 
         // Different parts of the DataGrid draw different pieces of the GridLines.
         // Rows draw a single horizontal line on the bottom.  The DataGridDetailsPresenter is the element that handles it.
@@ -295,7 +296,7 @@ namespace System.Windows.Controls.Primitives
                 drawingContext.DrawRectangle(dataGrid.HorizontalGridLinesBrush, null, rect);
             }
         }
-
+#endif
         #endregion
 
         #region Helpers
@@ -322,7 +323,14 @@ namespace System.Windows.Controls.Primitives
         /// </summary>
         internal DataGridRow DataGridRowOwner
         {
+#if HAS_UNO
+            // EffectiveRow (local Uno partial) falls back to the row recorded by
+            // DataGridRow when the visual-tree FindParent lookup hasn't resolved yet
+            // (OnVisualParentChanged is not raised under WinUI).
+            get { return EffectiveRow; }
+#else
             get { return DataGridHelper.FindParent<DataGridRow>(this); }
+#endif
         }
 
         #endregion
