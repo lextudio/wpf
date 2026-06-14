@@ -15,7 +15,7 @@ namespace System.Windows.Controls
     /// <summary>
     ///     Helper code for DataGrid.
     /// </summary>
-    internal static class DataGridHelper
+    internal static partial class DataGridHelper
     {
         #region GridLines
 
@@ -141,8 +141,16 @@ namespace System.Windows.Controls
 
         #endregion
 
+        // Migration status (Uno): the local DataGridHelper partial still provides
+        // the members coupled to the WPF property-transfer/coercion engine,
+        // binding-expression internals, and RTL flow-direction caching, plus
+        // FindParent (different templated-parent walk / signature),
+        // TreeHasFocusAndTabStop (Focusable/ContentElement deps), and
+        // OnColumnWidthChanged (real Uno render behavior). Migrated so far:
+        // GridLines, Notification, FindVisualParent, and the cells-panel accessors.
         #region Tree Helpers
 
+#if !HAS_UNO
         /// <summary>
         ///     Walks up the templated parent tree looking for a parent type.
         /// </summary>
@@ -163,6 +171,7 @@ namespace System.Windows.Controls
 
             return null;
         }
+#endif
 
         public static T FindVisualParent<T>(UIElement element) where T : UIElement
         {
@@ -200,6 +209,7 @@ namespace System.Windows.Controls
                     return true;
                 }
             }
+#if !HAS_UNO
             else
             {
                 ContentElement contentElement = element as ContentElement;
@@ -208,6 +218,7 @@ namespace System.Windows.Controls
                     return true;
                 }
             }
+#endif
 
             int childCount = VisualTreeHelper.GetChildrenCount(element);
             for (int i = 0; i < childCount; i++)
@@ -225,6 +236,8 @@ namespace System.Windows.Controls
         #endregion
 
         #region Cells Panel Helper
+
+#if !HAS_UNO
 
         /// <summary>
         ///     Invalidates a cell's panel if its column's width changes sufficiently.
@@ -274,6 +287,8 @@ namespace System.Windows.Controls
             }
         }
 
+#endif
+
         /// <summary>
         ///     Helper method which returns the clip for the cell based on whether it overlaps with frozen columns or not
         /// </summary>
@@ -322,12 +337,13 @@ namespace System.Windows.Controls
 
         #endregion
 
-        #region Property Helpers
-
         public static bool IsDefaultValue(DependencyObject d, DependencyProperty dp)
         {
             return DependencyPropertyHelper.GetValueSource(d, dp).BaseValueSource == BaseValueSource.Default;
         }
+
+#if !HAS_UNO
+        #region Property Helpers
 
         public static object GetCoercedTransferPropertyValue(
             DependencyObject baseObject,
@@ -695,6 +711,7 @@ namespace System.Windows.Controls
         }
 
         #endregion
+#endif
 
         #region Other Helpers
 
@@ -707,6 +724,7 @@ namespace System.Windows.Controls
             return (headersVisibility & DataGridHeadersVisibility.Row) == DataGridHeadersVisibility.Row;
         }
 
+#if !HAS_UNO
         /// <summary>
         ///     Helper method which coerces a value such that it satisfies min and max restrictions
         /// </summary>
@@ -716,6 +734,7 @@ namespace System.Windows.Controls
             value = Math.Min(value, maxValue);
             return value;
         }
+#endif
 
         /// <summary>
         ///     Helper to check if TextCompositionEventArgs.Text has any non

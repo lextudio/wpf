@@ -35,11 +35,6 @@ namespace System.Windows.Controls
 
         #endregion
 
-#if HAS_UNO
-        internal void InternalBringIndexIntoView(int index)
-        {
-        }
-#else
         #region Measure
 
         /// <summary>
@@ -1470,7 +1465,11 @@ namespace System.Windows.Controls
                 childWidth = child.DesiredSize.Width;
             }
 
+#if HAS_UNO
+            Rect rcChild = new Rect(0, 0, childWidth, arrangeState.ChildHeight);
+#else
             Rect rcChild = new Rect(new Size(childWidth, arrangeState.ChildHeight));
+#endif
 
             // Determinition of start point for children to arrange. Lets say the there are 5 columns of which 2 are frozen.
             // If the datagrid is scrolled horizontally. Following is the snapshot of arrange
@@ -1971,7 +1970,11 @@ namespace System.Windows.Controls
             ScrollViewer scrollViewer = dataGrid.InternalScrollHost;
             if (scrollViewer != null)
             {
+#if HAS_UNO
+                cellsPanelOffset = horizontalOffset + VisualTreeHelper.GetOffset(this).X;
+#else
                 cellsPanelOffset = horizontalOffset + TransformToAncestor(scrollViewer).Transform(new Point()).X;
+#endif
             }
 
             return cellsPanelOffset;
@@ -1990,7 +1993,11 @@ namespace System.Windows.Controls
                 if (scrollContentPresenter != null &&
                     !scrollContentPresenter.CanContentScroll)
                 {
+#if HAS_UNO
+                    availableViewportWidth = scrollContentPresenter.ActualWidth;
+#else
                     availableViewportWidth = scrollContentPresenter.ViewportWidth;
+#endif
                 }
                 else
                 {
@@ -2011,6 +2018,7 @@ namespace System.Windows.Controls
                 {
                     availableViewportWidth = rowPresenterAvailableSize.Width;
                 }
+#if !HAS_UNO
                 else if (parentDataGrid.IsGrouping) // parentRowsPresenter!=null implies parentDataGrid!=null
                 {
                     IHierarchicalVirtualizationAndScrollInfo hvsInfo = DataGridHelper.FindParent<GroupItem>(parentRowsPresenter) as IHierarchicalVirtualizationAndScrollInfo;
@@ -2019,6 +2027,7 @@ namespace System.Windows.Controls
                         availableViewportWidth = hvsInfo.Constraints.Viewport.Width;
                     }
                 }
+#endif
             }
 
             return availableViewportWidth;
@@ -2133,6 +2142,15 @@ namespace System.Windows.Controls
                 return;
             }
 
+#if HAS_UNO
+            // The horizontal scroll plumbing this relies on (IScrollInfo.
+            // SetHorizontalOffset, ScrollContentPresenter as IScrollInfo, and the
+            // dispatcher-priority retry) is not bridged on Uno, so column
+            // bring-into-view is deferred.
+            ArgumentOutOfRangeException.ThrowIfNegative(index);
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, parentDataGrid.Columns.Count);
+            base.BringIndexIntoView(index);
+#else
             ArgumentOutOfRangeException.ThrowIfNegative(index);
             ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, parentDataGrid.Columns.Count);
 
@@ -2209,6 +2227,7 @@ namespace System.Windows.Controls
                 // best we can do given the arcane behavior of the layout system.
                 InvalidateMeasure();
             }
+#endif
         }
 
         private void RetryBringIndexIntoView(int index)
@@ -2442,6 +2461,5 @@ namespace System.Windows.Controls
         private List<UIElement> _realizedChildren;
 
         #endregion
-#endif
     }
 }
