@@ -18,7 +18,7 @@ namespace System.Windows.Controls
     ///     relevant DataGridColumn to ensure all rows give cells in a given column the same size.
     ///     It is hardcoded against DataGridCell and DataGridColumnHeader.
     /// </summary>
-    public class DataGridCellsPanel : VirtualizingPanel
+    public partial class DataGridCellsPanel : VirtualizingPanel
     {
         #region Constructors
 
@@ -35,6 +35,11 @@ namespace System.Windows.Controls
 
         #endregion
 
+#if HAS_UNO
+        internal void InternalBringIndexIntoView(int index)
+        {
+        }
+#else
         #region Measure
 
         /// <summary>
@@ -2437,5 +2442,6 @@ namespace System.Windows.Controls
         private List<UIElement> _realizedChildren;
 
         #endregion
+#endif
     }
 }

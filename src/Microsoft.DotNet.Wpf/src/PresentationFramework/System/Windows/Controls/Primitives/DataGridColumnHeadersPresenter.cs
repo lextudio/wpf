@@ -19,7 +19,7 @@ namespace System.Windows.Controls.Primitives
     ///     SourceScrollViewerName property.
     /// </summary>
     [TemplatePart(Name = "PART_FillerColumnHeader", Type = typeof(DataGridColumnHeader))]
-    public class DataGridColumnHeadersPresenter : ItemsControl
+    public partial class DataGridColumnHeadersPresenter : ItemsControl
     {
         #region Constants
 
@@ -51,7 +51,7 @@ namespace System.Windows.Controls.Primitives
         /// <summary>
         ///     Tells the row owner about this element.
         /// </summary>
-        public override void OnApplyTemplate()
+        protected override void OnApplyTemplate()
         {
             // If a new template has just been generated then 
             // be sure to clear any stale ItemsHost references
@@ -140,7 +140,7 @@ namespace System.Windows.Controls.Primitives
 
             if (child != null)
             {
-                Rect childRect = new Rect(finalSize);
+                Rect childRect = new Rect(0, 0, finalSize.Width, finalSize.Height);
                 DataGrid dataGrid = ParentDataGrid;
                 if (dataGrid != null)
                 {
@@ -174,8 +174,7 @@ namespace System.Windows.Controls.Primitives
         /// </summary>
         protected override Geometry GetLayoutClip(Size layoutSlotSize)
         {
-            RectangleGeometry clip = new RectangleGeometry(new Rect(RenderSize));
-            clip.Freeze();
+            RectangleGeometry clip = new RectangleGeometry { Rect = new Rect(0, 0, RenderSize.Width, RenderSize.Height) };
             return clip;
         }
 

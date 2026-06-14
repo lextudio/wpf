@@ -9,7 +9,7 @@ namespace System.Windows.Controls
     /// <summary>
     /// The separator used to indicate drop location during column header drag-drop
     /// </summary>
-    internal class DataGridColumnDropSeparator : Separator
+    internal partial class DataGridColumnDropSeparator : Separator
     {
         #region Constructors
 

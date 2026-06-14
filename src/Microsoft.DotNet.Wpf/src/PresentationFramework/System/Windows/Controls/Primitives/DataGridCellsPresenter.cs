@@ -20,7 +20,7 @@ namespace System.Windows.Controls.Primitives
     ///     using a special collection to avoid keeping multiple references to the
     ///     same object.
     /// </summary>
-    public class DataGridCellsPresenter : ItemsControl
+    public partial class DataGridCellsPresenter : ItemsControl
     {
         #region Constructors
 
@@ -56,7 +56,7 @@ namespace System.Windows.Controls.Primitives
         /// <summary>
         ///     Tells the row owner about this element.
         /// </summary>
-        public override void OnApplyTemplate()
+        protected override void OnApplyTemplate()
         {
             // If a new template has just been generated then 
             // be sure to clear any stale ItemsHost references
@@ -455,6 +455,7 @@ namespace System.Windows.Controls.Primitives
         ///     OnRender.  Overriden to draw a horizontal line underneath the content.
         /// </summary>
         /// <param name="drawingContext"></param>
+        #if !HAS_UNO
         protected override void OnRender(DrawingContext drawingContext)
         {
             base.OnRender(drawingContext);
@@ -482,6 +483,7 @@ namespace System.Windows.Controls.Primitives
                 drawingContext.DrawRectangle(dataGrid.HorizontalGridLinesBrush, null, rect);
             }
         }
+        #endif
 
         #endregion
 

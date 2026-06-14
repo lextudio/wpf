@@ -6,7 +6,7 @@ namespace System.Windows.Controls.Primitives
     /// <summary>
     /// Panel that lays out individual rows top to bottom.  
     /// </summary>
-    public class DataGridRowsPresenter : VirtualizingStackPanel
+    public partial class DataGridRowsPresenter : VirtualizingStackPanel
     {
         #region Scroll Methods
 

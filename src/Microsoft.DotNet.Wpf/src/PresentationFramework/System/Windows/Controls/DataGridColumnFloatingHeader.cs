@@ -11,7 +11,7 @@ namespace System.Windows.Controls
     /// The control which would be used to indicate the drag during column header drag-drop
     /// </summary>
     [TemplatePart(Name = "PART_VisualBrushCanvas", Type = typeof(Canvas))]
-    internal class DataGridColumnFloatingHeader : Control
+    internal partial class DataGridColumnFloatingHeader : Control
     {
         #region Constructors
 
@@ -92,7 +92,7 @@ namespace System.Windows.Controls
 
         #region Methods and Properties
 
-        public override void OnApplyTemplate()
+        protected override void OnApplyTemplate()
         {
             base.OnApplyTemplate();
             _visualBrushCanvas = GetTemplateChild(VisualBrushCanvasTemplateName) as Canvas;
@@ -118,7 +118,7 @@ namespace System.Windows.Controls
             {
                 VisualBrush visualBrush = new VisualBrush(_referenceHeader)
                 {
-                    ViewboxUnits = BrushMappingMode.Absolute
+                    ViewboxUnits = System.Windows.Media.BrushMappingMode.Absolute
                 };
 
                 double width = Width;
