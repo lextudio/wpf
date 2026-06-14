@@ -25,7 +25,6 @@ namespace System.Windows.Controls
     public partial class DataGridRow : Control
     {
         #region Constants
-#if !HAS_UNO
         private const byte DATAGRIDROW_stateMouseOverCode = 0;
         private const byte DATAGRIDROW_stateMouseOverEditingCode = 1;
         private const byte DATAGRIDROW_stateMouseOverEditingFocusedCode = 2;
@@ -83,7 +82,6 @@ namespace System.Windows.Controls
             VisualStates.DATAGRIDROW_stateSelected,
             VisualStates.DATAGRIDROW_stateSelectedFocused
         };
-#endif
 
         #endregion Constants
 
@@ -186,7 +184,6 @@ namespace System.Windows.Controls
         #endregion
 
         #region Visual States
-#if !HAS_UNO
         private bool IsDataGridKeyboardFocusWithin
         {
             get
@@ -258,7 +255,6 @@ namespace System.Windows.Controls
 
             base.ChangeVisualState(useTransitions);
         }
-#endif
         #endregion
 
         #region Row Header
@@ -998,30 +994,17 @@ namespace System.Windows.Controls
         #endregion
 
         #region Alternation
-#if !HAS_UNO
 
         /// <summary>
         ///     AlternationIndex is set on containers generated for an ItemsControl, when
-        ///     the ItemsControl's AlternationCount property is positive.  The AlternationIndex
-        ///     lies in the range [0, AlternationCount), and adjacent containers always get
-        ///     assigned different values.
+        ///     the ItemsControl's AlternationCount property is positive.
         /// </summary>
-        /// <remarks>
-        ///     Exposes ItemsControl.AlternationIndexProperty attached property as a direct property.
-        /// </remarks>
         public int AlternationIndex
         {
             get { return (int)GetValue(AlternationIndexProperty); }
         }
 
-        /// <summary>
-        ///     DependencyProperty for AlternationIndex.
-        /// </summary>
-        /// <remarks>
-        ///     Same as ItemsControl.AlternationIndexProperty.
-        /// </remarks>
         public static readonly DependencyProperty AlternationIndexProperty = ItemsControl.AlternationIndexProperty.AddOwner(typeof(DataGridRow));
-#endif
 
         #endregion
 
@@ -1085,9 +1068,7 @@ namespace System.Windows.Controls
             // for these events and will update SelectedItems as necessary.
             row.RaiseSelectionChangedEvent(isSelected);
 
-#if !HAS_UNO
             row.UpdateVisualState();
-#endif
 
             // Update the header's IsRowSelected property
             row.NotifyPropertyChanged(row, string.Empty, e, DataGridNotificationTarget.Rows | DataGridNotificationTarget.RowHeaders);

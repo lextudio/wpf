@@ -173,11 +173,7 @@ namespace System.Windows.Controls
         public DataGridColumn Column
         {
             get { return (DataGridColumn)GetValue(ColumnProperty); }
-#if HAS_UNO
-            internal set { SetValue(ColumnProperty, value); }
-#else
             internal set { SetValue(ColumnPropertyKey, value); }
-#endif
         }
 
         /// <summary>
@@ -309,7 +305,6 @@ namespace System.Windows.Controls
 
         #region Style
 
-#if !HAS_UNO
         private static object OnCoerceStyle(DependencyObject d, object baseValue)
         {
             var cell = d as DataGridCell;
@@ -322,13 +317,11 @@ namespace System.Windows.Controls
                 cell.DataGridOwner,
                 DataGrid.CellStyleProperty);
         }
-#endif
 
         #endregion
 
         #region Template
 
-#if !HAS_UNO
         internal override void ChangeVisualState(bool useTransitions)
         {
             if (DataGridOwner == null)
@@ -389,6 +382,7 @@ namespace System.Windows.Controls
             base.ChangeVisualState(useTransitions);
         }
 
+#if !HAS_UNO
         /// <summary>
         ///     Builds a column's visual tree if not using templates.
         /// </summary>
@@ -496,19 +490,15 @@ namespace System.Windows.Controls
         /// <param name="isEditing">The new value of IsEditing.</param>
         protected virtual void OnIsEditingChanged(bool isEditing)
         {
-#if !HAS_UNO
             if (IsKeyboardFocusWithin && !IsKeyboardFocused)
             {
                 // Keep focus on the cell when flipping modes
                 Focus();
             }
-#endif
 
             // If templates aren't being used, then a new visual tree needs to be built.
             BuildVisualTree();
-#if !HAS_UNO
             UpdateVisualState();
-#endif
         }
 
 #if !HAS_UNO
@@ -516,6 +506,7 @@ namespace System.Windows.Controls
         {
             UpdateVisualState();
         }
+#endif
 
         /// <summary>
         ///     Whether the cell is the current cell.
@@ -538,7 +529,6 @@ namespace System.Windows.Controls
                 return false;
             }
         }
-#endif
 
 #if !HAS_UNO
         /// <summary>
@@ -573,6 +563,7 @@ namespace System.Windows.Controls
                 dataGrid,
                 DataGrid.IsReadOnlyProperty);
         }
+#endif
 
         private static void OnAnyLostFocus(object sender, RoutedEventArgs e)
         {
@@ -599,7 +590,6 @@ namespace System.Windows.Controls
                 owner?.FocusedCell = cell;
             }
         }
-#endif
 
 #if !HAS_UNO
         internal void BeginEdit(RoutedEventArgs e)
@@ -691,9 +681,9 @@ namespace System.Windows.Controls
             DataGridCell cell = (DataGridCell)sender;
             bool isSelected = (bool)e.NewValue;
 
-#if !HAS_UNO
             // There is no reason to notify the DataGrid if IsSelected's value came
             // from the DataGrid.
+#if !HAS_UNO
             if (!cell._syncingIsSelected)
             {
                 DataGrid dataGrid = cell.DataGridOwner;
@@ -702,10 +692,9 @@ namespace System.Windows.Controls
                 // DataGrid itself.
                 dataGrid?.CellIsSelectedChanged(cell, isSelected);
             }
-
+#endif
             cell.RaiseSelectionChangedEvent(isSelected);
             cell.UpdateVisualState();
-#endif
         }
 
         /// <summary>
@@ -726,7 +715,6 @@ namespace System.Windows.Controls
             }
         }
 
-#if !HAS_UNO
         private void RaiseSelectionChangedEvent(bool isSelected)
         {
             if (isSelected)
@@ -798,7 +786,6 @@ namespace System.Windows.Controls
         {
             RaiseEvent(e);
         }
-#endif
 
         #endregion
 
@@ -1068,15 +1055,11 @@ namespace System.Windows.Controls
         #endregion
 
         #region Frozen Columns
-#if !HAS_UNO
 
         /// <summary>
         /// Coercion call back for clip property which ensures that the cell overlapping with frozen
         /// column gets clipped appropriately.
         /// </summary>
-        /// <param name="d"></param>
-        /// <param name="baseValue"></param>
-        /// <returns></returns>
         private static object OnCoerceClip(DependencyObject d, object baseValue)
         {
             DataGridCell cell = (DataGridCell)d;
@@ -1095,12 +1078,11 @@ namespace System.Windows.Controls
             return geometry;
         }
 
-#endif
         #endregion
 
         #region Helpers
-#if !HAS_UNO
 
+#if !HAS_UNO
         internal DataGrid DataGridOwner
         {
             get
@@ -1119,6 +1101,7 @@ namespace System.Windows.Controls
                 return null;
             }
         }
+#endif
 
         private Panel ParentPanel
         {
@@ -1128,6 +1111,7 @@ namespace System.Windows.Controls
             }
         }
 
+#if !HAS_UNO
         internal DataGridRow RowOwner
         {
             get { return _owner; }
@@ -1146,7 +1130,11 @@ namespace System.Windows.Controls
                 return DataContext;
             }
         }
+#endif
 
+#if HAS_UNO
+        private DataGridCellsPresenter CellsPresenter => null;
+#else
         private DataGridCellsPresenter CellsPresenter
         {
             get
@@ -1154,6 +1142,7 @@ namespace System.Windows.Controls
                 return ItemsControl.ItemsControlFromItemContainer(this) as DataGridCellsPresenter;
             }
         }
+#endif
 
         private bool NeedsVisualTree
         {
@@ -1163,7 +1152,6 @@ namespace System.Windows.Controls
             }
         }
 
-#endif
         #endregion
 
         #region Data
