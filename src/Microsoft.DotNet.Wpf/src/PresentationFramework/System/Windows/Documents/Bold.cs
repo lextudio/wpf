@@ -15,7 +15,7 @@ namespace System.Windows.Documents
     /// Equivalent to a Span with FontWeight property set to FontWeights.Bold.
     /// Can contain other inline elements.
     /// </summary>
-    public class Bold : Span
+    public partial class Bold : Span
     {
         //-------------------------------------------------------------------
         //

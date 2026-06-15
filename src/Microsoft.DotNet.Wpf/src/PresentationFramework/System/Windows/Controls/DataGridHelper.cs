@@ -342,7 +342,6 @@ namespace System.Windows.Controls
             return DependencyPropertyHelper.GetValueSource(d, dp).BaseValueSource == BaseValueSource.Default;
         }
 
-#if !HAS_UNO
         #region Property Helpers
 
         public static object GetCoercedTransferPropertyValue(
@@ -435,6 +434,11 @@ namespace System.Windows.Controls
         /// </remarks>
         /// <param name="d">The DependencyObject which contains the property that needs to be transfered.</param>
         /// <param name="p">The DependencyProperty that is the target of the property transfer.</param>
+#if !HAS_UNO
+        // Upstream TransferProperty drives transfer via d.CoerceValue(p). On Uno
+        // CoerceValue is a no-op and the shim applies the transferred visuals
+        // directly, so the local DataGridHelper.TransferProperty partial owns this
+        // method. The engine it would call (below) is the real WPF source.
         public static void TransferProperty(DependencyObject d, DependencyProperty p)
         {
             var transferEnabledMap = GetPropertyTransferEnabledMapForObject(d);
@@ -455,6 +459,7 @@ namespace System.Windows.Controls
 
             return propertyTransferEnabledForObject;
         }
+#endif
 
         internal static bool IsPropertyTransferEnabled(DependencyObject d, DependencyProperty p)
         {
@@ -480,6 +485,7 @@ namespace System.Windows.Controls
 
         #endregion
 
+#if !HAS_UNO
         #region Binding
 
         /// <summary>
