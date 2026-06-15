@@ -82,6 +82,7 @@ namespace System.Windows.Controls
         /// <param name="newHeader">The new value of the Header property.</param>
         protected virtual void OnHeaderChanged(object oldHeader, object newHeader)
         {
+#if !HAS_UNO
             // if Header should not be treated as a logical child, there's
             // nothing to do
             if (!IsHeaderLogical())
@@ -89,6 +90,7 @@ namespace System.Windows.Controls
 
             RemoveLogicalChild(oldHeader);
             AddLogicalChild(newHeader);
+#endif
         }
 
         /// <summary>
@@ -259,10 +261,8 @@ namespace System.Windows.Controls
         internal void PrepareHeaderedItemsControl(object item, ItemsControl parentItemsControl)
         {
             bool headerIsNotLogical = item != this;
-            // don't treat Header as a logical child
             WriteControlFlag(ControlBoolFlags.HeaderIsNotLogical, headerIsNotLogical);
 
-            // copy styles from parent ItemsControl
             PrepareItemsControl(item, parentItemsControl);
 
             if (headerIsNotLogical)
@@ -275,21 +275,18 @@ namespace System.Windows.Controls
 
                 DataTemplate itemTemplate = parentItemsControl.ItemTemplate;
                 DataTemplateSelector itemTemplateSelector = parentItemsControl.ItemTemplateSelector;
+#if !HAS_UNO
                 string itemStringFormat = parentItemsControl.ItemStringFormat;
+#endif
 
                 if (itemTemplate != null)
-                {
                     SetValue(HeaderTemplateProperty, itemTemplate);
-                }
                 if (itemTemplateSelector != null)
-                {
                     SetValue(HeaderTemplateSelectorProperty, itemTemplateSelector);
-                }
-                if (itemStringFormat != null &&
-                    Helper.HasDefaultValue(this, HeaderStringFormatProperty))
-                {
+#if !HAS_UNO
+                if (itemStringFormat != null && Helper.HasDefaultValue(this, HeaderStringFormatProperty))
                     SetValue(HeaderStringFormatProperty, itemStringFormat);
-                }
+#endif
 
                 PrepareHierarchy(item, parentItemsControl);
             }
@@ -306,7 +303,11 @@ namespace System.Windows.Controls
             {
                 if (HeaderIsItem)
                 {
+#if HAS_UNO
+                    Header = null;
+#else
                     Header = BindingExpressionBase.DisconnectedItem;
+#endif
                 }
             }
         }
@@ -315,10 +316,12 @@ namespace System.Windows.Controls
         ///     Gives a string representation of this object.
         /// </summary>
         /// <returns></returns>
+#if !HAS_UNO
         internal override string GetPlainText()
         {
             return ContentControl.ContentObjectToString(Header);
         }
+#endif
 
         #endregion
 
@@ -327,6 +330,7 @@ namespace System.Windows.Controls
         /// <summary>
         ///     Gives a string representation of this object.
         /// </summary>
+#if !HAS_UNO
         public override string ToString()
         {
             string typeText = this.GetType().ToString();
@@ -366,6 +370,7 @@ namespace System.Windows.Controls
             // Not able to access the dispatcher
             return typeText;
         }
+#endif
 
         #endregion
 
@@ -385,7 +390,11 @@ namespace System.Windows.Controls
                     return base.LogicalChildren;
                 }
 
+#if HAS_UNO
+                return new MS.Internal.Controls.HeaderedItemsModelTreeEnumerator(this, base.LogicalChildren, header);
+#else
                 return new HeaderedItemsModelTreeEnumerator(this, base.LogicalChildren, header);
+#endif
             }
         }
 
@@ -398,6 +407,10 @@ namespace System.Windows.Controls
         // ItemTemplateSelector, and ItemStringFormat properties from the template.
         private void PrepareHierarchy(object item, ItemsControl parentItemsControl)
         {
+#if HAS_UNO
+            // HierarchicalDataTemplate / FindTemplateResourceInternal are WPF-only.
+            // ToolBar does not use hierarchical data; skip entirely on HAS_UNO.
+#else
             // get the effective header template
             DataTemplate headerTemplate = HeaderTemplate;
 
@@ -430,104 +443,76 @@ namespace System.Windows.Controls
 
                 if (hTemplate.IsItemStringFormatSet && ItemStringFormat == parentItemsControl.ItemStringFormat)
                 {
-                    // if the HDT defines a string format, turn off the
-                    // forwarding of ItemTemplate[Selector] (which would get in the way).
                     ClearValue(ItemTemplateProperty);
                     ClearValue(ItemTemplateSelectorProperty);
-
-                    // forward the HDT's string format
                     ClearValue(ItemStringFormatProperty);
                     bool setItemStringFormat = (hTemplate.ItemStringFormat != null);
                     if (setItemStringFormat)
-                    {
                         ItemStringFormat = hTemplate.ItemStringFormat;
-                    }
                 }
 
                 if (hTemplate.IsItemTemplateSelectorSet && ItemTemplateSelector == parentItemsControl.ItemTemplateSelector)
                 {
-                    // if the HDT defines a template selector, turn off the
-                    // forwarding of ItemTemplate (which would get in the way).
                     ClearValue(ItemTemplateProperty);
-
-                    // forward the HDT's template selector
                     ClearValue(ItemTemplateSelectorProperty);
                     bool setItemTemplateSelector = (hTemplate.ItemTemplateSelector != null);
                     if (setItemTemplateSelector)
-                    {
                         ItemTemplateSelector = hTemplate.ItemTemplateSelector;
-                    }
                 }
 
                 if (hTemplate.IsItemTemplateSet && templateMatches)
                 {
-                    // forward the HDT's template
                     ClearValue(ItemTemplateProperty);
                     bool setItemTemplate = (hTemplate.ItemTemplate != null);
                     if (setItemTemplate)
-                    {
                         ItemTemplate = hTemplate.ItemTemplate;
-                    }
                 }
 
                 if (hTemplate.IsItemContainerStyleSelectorSet && ItemContainerStyleSelector == parentItemsControl.ItemContainerStyleSelector)
                 {
-                    // if the HDT defines a container-style selector, turn off the
-                    // forwarding of ItemContainerStyle (which would get in the way).
                     ClearValue(ItemContainerStyleProperty);
-
-                    // forward the HDT's container-style selector
                     ClearValue(ItemContainerStyleSelectorProperty);
                     bool setItemContainerStyleSelector = (hTemplate.ItemContainerStyleSelector != null);
                     if (setItemContainerStyleSelector)
-                    {
                         ItemContainerStyleSelector = hTemplate.ItemContainerStyleSelector;
-                    }
                 }
 
                 if (hTemplate.IsItemContainerStyleSet && containerStyleMatches)
                 {
-                    // forward the HDT's container style
                     ClearValue(ItemContainerStyleProperty);
                     bool setItemContainerStyle = (hTemplate.ItemContainerStyle != null);
                     if (setItemContainerStyle)
-                    {
                         ItemContainerStyle = hTemplate.ItemContainerStyle;
-                    }
                 }
 
                 if (hTemplate.IsAlternationCountSet && AlternationCount == parentItemsControl.AlternationCount)
                 {
-                    // forward the HDT's alternation count
                     ClearValue(AlternationCountProperty);
-                    bool setAlternationCount = true;
-                    if (setAlternationCount)
-                    {
-                        AlternationCount = hTemplate.AlternationCount;
-                    }
+                    AlternationCount = hTemplate.AlternationCount;
                 }
 
                 if (hTemplate.IsItemBindingGroupSet && ItemBindingGroup == parentItemsControl.ItemBindingGroup)
                 {
-                    // forward the HDT's ItemBindingGroup
                     ClearValue(ItemBindingGroupProperty);
                     bool setItemBindingGroup = (hTemplate.ItemBindingGroup != null);
                     if (setItemBindingGroup)
-                    {
                         ItemBindingGroup = hTemplate.ItemBindingGroup;
-                    }
                 }
             }
+#endif
         }
 
         // return true if the dp is bound via the given Binding
+#if !HAS_UNO
         private bool IsBound(DependencyProperty dp, Binding binding)
         {
             BindingExpressionBase bindExpr = BindingOperations.GetBindingExpression(this, dp);
             return (bindExpr != null && bindExpr.ParentBindingBase == binding);
         }
+#endif
 
         // return true if the Header should be a logical child
+#if !HAS_UNO
         private bool IsHeaderLogical()
         {
             // use cached result, if available
@@ -544,6 +529,9 @@ namespace System.Windows.Controls
             // otherwise, Header is logical
             return true;
         }
+#else
+        private bool IsHeaderLogical() => true;
+#endif
 
         // return true if the Header is a data item
         private bool HeaderIsItem

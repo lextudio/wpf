@@ -37,14 +37,18 @@ namespace System.Windows.Controls
 
         static ToolBarTray()
         {
+#if !HAS_UNO
             DefaultStyleKeyProperty.OverrideMetadata(typeof(ToolBarTray), new FrameworkPropertyMetadata(typeof(ToolBarTray)));
+#endif
+#if !HAS_UNO
             _dType = DependencyObjectType.FromSystemTypeInternal(typeof(ToolBarTray));
 
-
             EventManager.RegisterClassHandler(typeof(ToolBarTray), Thumb.DragDeltaEvent, new DragDeltaEventHandler(OnThumbDragDelta));
+#endif
             KeyboardNavigation.ControlTabNavigationProperty.OverrideMetadata(typeof(ToolBarTray), new FrameworkPropertyMetadata(KeyboardNavigationMode.Cycle));
-
+#if !HAS_UNO
             ControlsTraceLogger.AddControl(TelemetryControls.ToolBarTray);
+#endif
         }
 
         /// <summary>
@@ -93,8 +97,11 @@ namespace System.Windows.Controls
                                 new FrameworkPropertyMetadata(
                                             Orientation.Horizontal,
                                             FrameworkPropertyMetadataOptions.AffectsParentMeasure,
-                                            new PropertyChangedCallback(OnOrientationPropertyChanged)),
-                                new ValidateValueCallback(ScrollBar.IsValidOrientation));
+                                            new PropertyChangedCallback(OnOrientationPropertyChanged))
+#if !HAS_UNO
+                                , new ValidateValueCallback(ScrollBar.IsValidOrientation)
+#endif
+                                );
 
         // Then ToolBarTray Orientation is changing we need to invalidate its ToolBars Orientation
         private static void OnOrientationPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -291,6 +298,7 @@ namespace System.Windows.Controls
         /// <summary>
         /// Returns enumerator to logical children.
         /// </summary>
+#if !HAS_UNO
         protected internal override IEnumerator LogicalChildren
         {
             get
@@ -303,6 +311,7 @@ namespace System.Windows.Controls
                 return this.ToolBars.GetEnumerator();
             }
         }
+#endif
 
         #endregion Public Methods
 
@@ -318,6 +327,7 @@ namespace System.Windows.Controls
         /// <summary>
         /// Override from UIElement
         /// </summary>
+#if !HAS_UNO
         protected override void OnRender(DrawingContext dc)
         {
             // Draw background in rectangle inside border.
@@ -329,6 +339,7 @@ namespace System.Windows.Controls
                                  new Rect(0, 0, RenderSize.Width, RenderSize.Height));
             }
         }
+#endif
 
         /// <summary>
         /// Updates DesiredSize of the ToolBarTray. Called by parent UIElement.
@@ -430,7 +441,8 @@ namespace System.Windows.Controls
                 {
                     ToolBar toolBar = band[toolBarIndex];
                     Size toolBarArrangeSize = new Size(fHorizontal ? toolBar.DesiredSize.Width : bandThickness, fHorizontal ? bandThickness : toolBar.DesiredSize.Height );
-                    rcChild.Size = toolBarArrangeSize;
+                    rcChild.Width = toolBarArrangeSize.Width;
+                    rcChild.Height = toolBarArrangeSize.Height;
                     toolBar.Arrange(rcChild);
                     if (fHorizontal)
                         rcChild.X += toolBarArrangeSize.Width;
@@ -450,6 +462,7 @@ namespace System.Windows.Controls
         /// <summary>
         /// Gets the Visual children count.
         /// </summary>
+#if !HAS_UNO
         protected override int VisualChildrenCount
         {
             get
@@ -476,6 +489,7 @@ namespace System.Windows.Controls
             }
             return _toolBarsCollection[index];
         }
+#endif
 
         #endregion Protected Methods
 
@@ -488,6 +502,7 @@ namespace System.Windows.Controls
         #region Private Methods
 
         // Event handler to listen to thumb events.
+#if !HAS_UNO
         private static void OnThumbDragDelta(object sender, DragDeltaEventArgs e)
         {
             ToolBarTray toolBarTray = (ToolBarTray)sender;
@@ -596,7 +611,7 @@ namespace System.Windows.Controls
                             {
                                 ExpandToolBars(band, 0, toolBarIndex - 1, thumbChange);
                             }
-                            else 
+                            else
                             {
                                 if (toolBarIndex < band.Count - 1) // Swap toolbars
                                 {
@@ -660,6 +675,7 @@ namespace System.Windows.Controls
             transform?.TryTransform(point, out p);
             return p;
         }
+#endif
 
         private void ShrinkToolBars(List<ToolBar> band, int startIndex, int endIndex, double shrinkAmount)
         {
@@ -969,7 +985,7 @@ namespace System.Windows.Controls
         #endregion
 
         #region DTypeThemeStyleKey
-
+#if !HAS_UNO
         // Returns the DependencyObjectType for the registered ThemeStyleKey's default
         // value. Controls will override this method to return approriate types.
         internal override DependencyObjectType DTypeThemeStyleKey
@@ -978,7 +994,7 @@ namespace System.Windows.Controls
         }
 
         private static DependencyObjectType _dType;
-
+#endif
         #endregion DTypeThemeStyleKey
     }
 }

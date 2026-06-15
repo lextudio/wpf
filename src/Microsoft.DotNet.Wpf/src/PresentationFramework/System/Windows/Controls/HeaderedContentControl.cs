@@ -28,7 +28,9 @@ namespace System.Windows.Controls
         static HeaderedContentControl()
         {
             DefaultStyleKeyProperty.OverrideMetadata(typeof(HeaderedContentControl), new FrameworkPropertyMetadata(typeof(HeaderedContentControl)));
+#if !HAS_UNO
             _dType = DependencyObjectType.FromSystemTypeInternal(typeof(HeaderedContentControl));
+#endif
         }
 
         /// <summary>
@@ -277,7 +279,11 @@ namespace System.Windows.Controls
                     return base.LogicalChildren;
                 }
 
+#if HAS_UNO
+                return new MS.Internal.Controls.HeaderedContentModelTreeEnumerator(this, ContentIsNotLogical ? null : Content, header);
+#else
                 return new HeaderedContentModelTreeEnumerator(this, ContentIsNotLogical ? null : Content, header);
+#endif
             }
         }
 
@@ -289,10 +295,12 @@ namespace System.Windows.Controls
         ///     Gives a string representation of this object.
         /// </summary>
         /// <returns></returns>
+#if !HAS_UNO
         internal override string GetPlainText()
         {
             return ContentControl.ContentObjectToString(Header);
         }
+#endif
 
         /// <summary>
         ///    Indicates whether Header should be a logical child or not.
@@ -360,6 +368,7 @@ namespace System.Windows.Controls
         {
             if (item != this)
             {
+#if !HAS_UNO
                 if (ContentIsItem)
                 {
                     Content = BindingExpressionBase.DisconnectedItem;
@@ -369,6 +378,7 @@ namespace System.Windows.Controls
                 {
                     Header = BindingExpressionBase.DisconnectedItem;
                 }
+#endif
             }
         }
 
@@ -380,6 +390,7 @@ namespace System.Windows.Controls
         /// <summary>
         ///     Gives a string representation of this object.
         /// </summary>
+#if !HAS_UNO
         public override string ToString()
         {
             string typeText = this.GetType().ToString();
@@ -415,11 +426,12 @@ namespace System.Windows.Controls
             // Not able to access the dispatcher
             return typeText;
         }
+#endif
 
         #endregion
 
         #region DTypeThemeStyleKey
-
+#if !HAS_UNO
         // Returns the DependencyObjectType for the registered DefaultStyleKey's default
         // value. Controls will override this method to return approriate types.
         internal override DependencyObjectType DTypeThemeStyleKey
@@ -428,7 +440,7 @@ namespace System.Windows.Controls
         }
 
         private static DependencyObjectType _dType;
-
+#endif
         #endregion DTypeThemeStyleKey
     }
 }

@@ -55,23 +55,27 @@ namespace System.Windows.Controls
 
         static ToolBar()
         {
+#if !HAS_UNO
             // Disable tooltips on toolbar when the overflow is open
             ToolTipService.IsEnabledProperty.OverrideMetadata(typeof(ToolBar), new FrameworkPropertyMetadata(null, new CoerceValueCallback(CoerceToolTipIsEnabled)));
 
             DefaultStyleKeyProperty.OverrideMetadata(typeof(ToolBar), new FrameworkPropertyMetadata(typeof(ToolBar)));
             _dType = DependencyObjectType.FromSystemTypeInternal(typeof(ToolBar));
 
-            IsTabStopProperty.OverrideMetadata(typeof(ToolBar), new FrameworkPropertyMetadata(MS.Internal.KnownBoxes.BooleanBoxes.FalseBox));
             FocusableProperty.OverrideMetadata(typeof(ToolBar), new FrameworkPropertyMetadata(MS.Internal.KnownBoxes.BooleanBoxes.FalseBox));
-            KeyboardNavigation.DirectionalNavigationProperty.OverrideMetadata(typeof(ToolBar), new FrameworkPropertyMetadata(KeyboardNavigationMode.Cycle));
-            KeyboardNavigation.TabNavigationProperty.OverrideMetadata(typeof(ToolBar), new FrameworkPropertyMetadata(KeyboardNavigationMode.Cycle));
-            KeyboardNavigation.ControlTabNavigationProperty.OverrideMetadata(typeof(ToolBar), new FrameworkPropertyMetadata(KeyboardNavigationMode.Once));
+
             FocusManager.IsFocusScopeProperty.OverrideMetadata(typeof(ToolBar), new FrameworkPropertyMetadata(BooleanBoxes.TrueBox));
 
             EventManager.RegisterClassHandler(typeof(ToolBar), Mouse.MouseDownEvent, new MouseButtonEventHandler(OnMouseButtonDown), true);
             EventManager.RegisterClassHandler(typeof(ToolBar), ButtonBase.ClickEvent, new RoutedEventHandler(_OnClick));
 
             ControlsTraceLogger.AddControl(TelemetryControls.ToolBar);
+#endif
+
+            IsTabStopProperty.OverrideMetadata(typeof(ToolBar), new FrameworkPropertyMetadata(MS.Internal.KnownBoxes.BooleanBoxes.FalseBox));
+            KeyboardNavigation.DirectionalNavigationProperty.OverrideMetadata(typeof(ToolBar), new FrameworkPropertyMetadata(KeyboardNavigationMode.Cycle));
+            KeyboardNavigation.TabNavigationProperty.OverrideMetadata(typeof(ToolBar), new FrameworkPropertyMetadata(KeyboardNavigationMode.Cycle));
+            KeyboardNavigation.ControlTabNavigationProperty.OverrideMetadata(typeof(ToolBar), new FrameworkPropertyMetadata(KeyboardNavigationMode.Once));
         }
 
         /// <summary>
@@ -100,7 +104,7 @@ namespace System.Windows.Controls
                         typeof(ToolBar),
                         new FrameworkPropertyMetadata(
                                 Orientation.Horizontal,
-                                null,
+                                (PropertyChangedCallback)null,
                                 new CoerceValueCallback(CoerceOrientation)));
 
         /// <summary>
@@ -198,7 +202,7 @@ namespace System.Windows.Controls
         public bool IsOverflowOpen
         {
             get { return (bool) GetValue(IsOverflowOpenProperty); }
-            set { SetValue(IsOverflowOpenProperty, BooleanBoxes.Box(value)); }
+            set { SetValue(IsOverflowOpenProperty, value ? BooleanBoxes.TrueBox : BooleanBoxes.FalseBox); }
         }
 
         private static object CoerceIsOverflowOpen(DependencyObject d, object value)
@@ -222,6 +226,7 @@ namespace System.Windows.Controls
             return tb.IsOverflowOpen ? BooleanBoxes.FalseBox : value;
         }
 
+#if !HAS_UNO
         private void RegisterToOpenOnLoad()
         {
             Loaded += new RoutedEventHandler(OpenOnLoad);
@@ -237,6 +242,9 @@ namespace System.Windows.Controls
                 return null;
             }), null);
         }
+#else
+        private void RegisterToOpenOnLoad() { }
+#endif
 
         private static void OnOverflowOpenChanged(DependencyObject element, DependencyPropertyChangedEventArgs e)
         {
@@ -244,26 +252,29 @@ namespace System.Windows.Controls
 
             if ((bool) e.NewValue)
             {
-                // When the drop down opens, take capture
+#if !HAS_UNO
                 Mouse.Capture(toolBar, CaptureMode.SubTree);
+#endif
                 toolBar.SetFocusOnToolBarOverflowPanel();
             }
             else
             {
-                // If focus is still within the ToolBarOverflowPanel, make sure we the focus is restored to the main focus scope
                 ToolBarOverflowPanel overflow = toolBar.ToolBarOverflowPanel;
                 if (overflow != null && overflow.IsKeyboardFocusWithin)
                 {
+#if !HAS_UNO
                     Keyboard.Focus(null);
+#endif
                 }
-
+#if !HAS_UNO
                 if (Mouse.Captured == toolBar)
-                {
                     Mouse.Capture(null);
-                }
+#endif
             }
 
+#if !HAS_UNO
             toolBar.CoerceValue(ToolTipService.IsEnabledProperty);
+#endif
         }
 
         private void SetFocusOnToolBarOverflowPanel()
@@ -272,16 +283,12 @@ namespace System.Windows.Controls
             {
                 if (ToolBarOverflowPanel != null)
                 {
-                    // If the overflow is opened by keyboard - focus the first item
-                    // otherwise - set focus on the panel itself
+#if !HAS_UNO
                     if (KeyboardNavigation.IsKeyboardMostRecentInputDevice())
-                    {
                         ToolBarOverflowPanel.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
-                    }
                     else
-                    {
+#endif
                         ToolBarOverflowPanel.Focus();
-                    }
                 }
                 return null;
             }), null);
@@ -439,10 +446,12 @@ namespace System.Windows.Controls
         /// <summary>
         /// Creates AutomationPeer (<see cref="UIElement.OnCreateAutomationPeer"/>)
         /// </summary>
+#if !HAS_UNO
         protected override AutomationPeer OnCreateAutomationPeer()
         {
             return new ToolBarAutomationPeer(this);
         }
+#endif
 
         /// <summary>
         /// Prepare the element to display the item.  This may involve
@@ -452,8 +461,6 @@ namespace System.Windows.Controls
         {
             base.PrepareContainerForItemOverride(element, item);
 
-            // For certain known types, automatically change their default style
-            // to point to a ToolBar version.
             FrameworkElement fe = element as FrameworkElement;
             if (fe != null)
             {
@@ -461,8 +468,10 @@ namespace System.Windows.Controls
                 ResourceKey resourceKey = null;
                 if (feType == typeof(Button))
                     resourceKey = ButtonStyleKey;
+#if !HAS_UNO
                 else if (feType == typeof(ToggleButton))
                     resourceKey = ToggleButtonStyleKey;
+#endif
                 else if (feType == typeof(Separator))
                     resourceKey = SeparatorStyleKey;
                 else if (feType == typeof(CheckBox))
@@ -473,33 +482,48 @@ namespace System.Windows.Controls
                     resourceKey = ComboBoxStyleKey;
                 else if (feType == typeof(TextBox))
                     resourceKey = TextBoxStyleKey;
+#if !HAS_UNO
                 else if (feType == typeof(Menu))
                     resourceKey = MenuStyleKey;
+#endif
 
                 if (resourceKey != null)
                 {
+#if HAS_UNO
+                    // On HAS_UNO GetValueSource is always Local; just set the resource reference.
+                    fe.SetResourceReference(StyleProperty, resourceKey);
+#else
                     bool hasModifiers;
                     BaseValueSourceInternal vs = fe.GetValueSource(StyleProperty, null, out hasModifiers);
-
                     if (vs <= BaseValueSourceInternal.ImplicitReference)
                         fe.SetResourceReference(StyleProperty, resourceKey);
                     fe.DefaultStyleKey = resourceKey;
+#endif
                 }
             }
         }
 
-        internal override void OnTemplateChangedInternal(FrameworkTemplate oldTemplate, FrameworkTemplate newTemplate)
+#if HAS_UNO
+        // On HAS_UNO template change is signaled via OnApplyTemplate.
+        protected override void OnApplyTemplate()
         {
-            // Invalidate template references
             _toolBarPanel = null;
             _toolBarOverflowPanel = null;
-
+            base.OnApplyTemplate();
+        }
+#else
+        internal override void OnTemplateChangedInternal(FrameworkTemplate oldTemplate, FrameworkTemplate newTemplate)
+        {
+            _toolBarPanel = null;
+            _toolBarOverflowPanel = null;
             base.OnTemplateChangedInternal(oldTemplate, newTemplate);
         }
+#endif
 
         /// <summary>
         ///     This method is invoked when the Items property changes.
         /// </summary>
+#if !HAS_UNO
         protected override void OnItemsChanged(NotifyCollectionChangedEventArgs e)
         {
             // When items change, invalidate layout so that the decision
@@ -508,6 +532,7 @@ namespace System.Windows.Controls
 
             base.OnItemsChanged(e);
         }
+#endif
 
         /// <summary>
         /// Measure the content and store the desired size of the content
@@ -537,7 +562,7 @@ namespace System.Windows.Controls
                 // Calculate the extra length from the extra space allocated between the ToolBar and the ToolBarPanel.
                 double extraLength;
                 Thickness margin = toolBarPanel.Margin;
-                if (toolBarPanel.Orientation == Orientation.Horizontal)
+                if ((int)toolBarPanel.Orientation == (int)Orientation.Horizontal)
                 {
                     extraLength = Math.Max(0.0, desiredSize.Width - toolBarPanel.DesiredSize.Width + margin.Left + margin.Right);
                 }
@@ -558,17 +583,14 @@ namespace System.Windows.Controls
         ///     Called when this element loses mouse capture.
         /// </summary>
         /// <param name="e"></param>
+#if !HAS_UNO
         protected override void OnLostMouseCapture(MouseEventArgs e)
         {
             base.OnLostMouseCapture(e);
-
-            // ToolBar has a capture when its overflow panel is open
-            // close the overflow panel is case capture is set to null
             if (Mouse.Captured == null)
-            {
                 Close();
-            }
         }
+#endif
 
         #endregion Override methods
 
@@ -624,6 +646,7 @@ namespace System.Windows.Controls
         /// This is the method that responds to the KeyDown event.
         /// </summary>
         /// <param name="e"></param>
+#if !HAS_UNO
         protected override void OnKeyDown(KeyEventArgs e)
         {
             UIElement newFocusElement = null;
@@ -673,6 +696,7 @@ namespace System.Windows.Controls
             if (!e.Handled)
                 base.OnKeyDown(e);
         }
+#endif
 
         private static void OnMouseButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -695,23 +719,25 @@ namespace System.Windows.Controls
                 toolBar.Close();
         }
 
+#if !HAS_UNO
         internal override void OnAncestorChanged()
         {
-            // Orientation depends on the logical parent -- so invalidate it when that changes
             CoerceValue(OrientationProperty);
         }
+#endif
 
         private void Close()
         {
+#if HAS_UNO
+            SetValue(IsOverflowOpenProperty, BooleanBoxes.FalseBox);
+#else
             SetCurrentValueInternal(IsOverflowOpenProperty, BooleanBoxes.FalseBox);
+#endif
         }
 
         private ToolBarTray ToolBarTray
         {
-            get
-            {
-                return Parent as ToolBarTray;
-            }
+            get { return Parent as ToolBarTray; }
         }
 
         internal double MinLength
@@ -739,16 +765,14 @@ namespace System.Windows.Controls
         #endregion private data
 
         #region DTypeThemeStyleKey
-
-        // Returns the DependencyObjectType for the registered ThemeStyleKey's default
-        // value. Controls will override this method to return approriate types.
+#if !HAS_UNO
         internal override DependencyObjectType DTypeThemeStyleKey
         {
             get { return _dType; }
         }
 
         private static DependencyObjectType _dType;
-
+#endif
         #endregion DTypeThemeStyleKey
 
         #region ItemsStyleKey

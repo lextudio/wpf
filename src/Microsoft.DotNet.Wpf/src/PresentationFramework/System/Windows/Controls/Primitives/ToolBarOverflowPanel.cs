@@ -46,6 +46,7 @@ namespace System.Windows.Controls.Primitives
         /// </summary>
         /// <param name="constraint"></param>
         /// <returns></returns>
+#if !HAS_UNO
         protected override Size MeasureOverride(Size constraint)
         {
             Size curLineSize = new Size();
@@ -141,12 +142,14 @@ namespace System.Windows.Controls.Primitives
 
             return _panelSize;
         }
+#endif
 
         /// <summary>
         /// Content arrangement.
         /// </summary>
         /// <param name="arrangeBounds"></param>
         /// <returns></returns>
+#if !HAS_UNO
         protected override Size ArrangeOverride(Size arrangeBounds)
         {
             int firstInLine = 0;
@@ -180,18 +183,22 @@ namespace System.Windows.Controls.Primitives
 
             return _panelSize;
         }
+#endif
 
         /// <summary>
         /// Creates a new UIElementCollection. Panel-derived class can create its own version of
         /// UIElementCollection -derived class to add cached information to every child or to
         /// intercept any Add/Remove actions (for example, for incremental layout update)
         /// </summary>
+#if !HAS_UNO
         protected override UIElementCollection CreateUIElementCollection(FrameworkElement logicalParent)
         {
             // we ignore the Logical Parent (this) if we have ToolBar as our TemplatedParent
             return new UIElementCollection(this, TemplatedParent == null ? logicalParent : null);
         }
+#endif
 
+#if !HAS_UNO
         private void arrangeLine(double y, double lineHeight, int start, int end)
         {
             double x = 0;
@@ -203,13 +210,14 @@ namespace System.Windows.Controls.Primitives
                 x += child.DesiredSize.Width;
             }
         }
+#endif
         #endregion Override methods
 
         #region private implementation
 
         private ToolBar ToolBar
         {
-            get { return TemplatedParent as ToolBar; }
+            get { return this.TemplatedParent as ToolBar; }
         }
 
         private ToolBarPanel ToolBarPanel

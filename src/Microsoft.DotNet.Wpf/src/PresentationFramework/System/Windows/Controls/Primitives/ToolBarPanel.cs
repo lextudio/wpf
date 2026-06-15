@@ -19,7 +19,9 @@ namespace System.Windows.Controls.Primitives
     {
         static ToolBarPanel()
         {
+#if !HAS_UNO
             ControlsTraceLogger.AddControl(TelemetryControls.ToolBarPanel);
+#endif
         }
 
         /// <summary>
@@ -43,6 +45,7 @@ namespace System.Windows.Controls.Primitives
             private set;
         }
 
+#if !HAS_UNO
         private bool MeasureGeneratedItems(bool asNeededPass, Size constraint, bool horizontal, double maxExtent, ref Size panelDesiredSize, out double overflowExtent)
         {
             ToolBarOverflowPanel overflowPanel = ToolBarOverflowPanel;
@@ -218,6 +221,7 @@ namespace System.Windows.Controls.Primitives
 
             return hasOverflowItems;
         }
+#endif
 
         /// <summary>
         /// Measure the content and store the desired size of the content
@@ -228,6 +232,7 @@ namespace System.Windows.Controls.Primitives
         {
             Size stackDesiredSize = new Size();
 
+#if !HAS_UNO
             if (IsItemsHost)
             {
                 Size layoutSlotSize = constraint;
@@ -246,21 +251,12 @@ namespace System.Windows.Controls.Primitives
                     maxExtent = constraint.Height;
                 }
 
-                // This first call will measure all of the non-AsNeeded elements (i.e. we know
-                // whether they're going into the overflow or not.
-                // overflowExtent will be the size of the Always elements, which is not actually
-                // needed for subsequent calculations.
                 bool hasAlwaysOverflowItems = MeasureGeneratedItems(/* asNeeded = */ false, layoutSlotSize, horizontal, maxExtent, ref stackDesiredSize, out overflowExtent);
 
-                // At this point, the desired size is the minimum size of the ToolBar.
                 MinLength = horizontal ? stackDesiredSize.Width : stackDesiredSize.Height;
 
-                // This second call will measure all of the AsNeeded elements and place
-                // them in the appropriate location.
                 bool hasAsNeededOverflowItems = MeasureGeneratedItems(/* asNeeded = */ true, layoutSlotSize, horizontal, maxExtent, ref stackDesiredSize, out overflowExtent);
 
-                // At this point, the desired size is complete. The desired size plus overflowExtent
-                // is the maximum size of the ToolBar.
                 MaxLength = (horizontal ? stackDesiredSize.Width : stackDesiredSize.Height) + overflowExtent;
 
                 ToolBar toolbar = ToolBar;
@@ -270,6 +266,9 @@ namespace System.Windows.Controls.Primitives
             {
                 stackDesiredSize = base.MeasureOverride(constraint);
             }
+#else
+            stackDesiredSize = base.MeasureOverride(constraint);
+#endif
 
             return stackDesiredSize;
         }
@@ -278,6 +277,7 @@ namespace System.Windows.Controls.Primitives
         /// Content arrangement.
         /// </summary>
         /// <param name="arrangeSize">Arrange size</param>
+#if !HAS_UNO
         protected override Size ArrangeOverride(Size arrangeSize)
         {
             UIElementCollection children = InternalChildren;
@@ -312,11 +312,19 @@ namespace System.Windows.Controls.Primitives
 
             return arrangeSize;
         }
+#endif
 
         /// <summary>
         /// ToolBarPanel sets bindings a on its Orientation property to its TemplatedParent if the
         /// property is not already set.
         /// </summary>
+#if HAS_UNO
+        protected override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+            // On Uno, ToolBar sets Orientation directly; data binding not needed here.
+        }
+#else
         internal override void OnPreApplyTemplate()
         {
             base.OnPreApplyTemplate();
@@ -331,11 +339,12 @@ namespace System.Windows.Controls.Primitives
                 SetBinding(OrientationProperty, binding);
             }
         }
+#endif
 
         #endregion
 
         #region Item Generation
-
+#if !HAS_UNO
         internal override void GenerateChildren()
         {
             base.GenerateChildren();
@@ -500,14 +509,14 @@ namespace System.Windows.Controls.Primitives
                 _generatedItemsCollection.Insert(toIndex + i, elements[i]);
             }
         }
-
+#endif
         #endregion
 
         #region Helpers
 
         private ToolBar ToolBar
         {
-            get { return TemplatedParent as ToolBar; }
+            get { return this.TemplatedParent as ToolBar; }
         }
 
         private ToolBarOverflowPanel ToolBarOverflowPanel
@@ -520,17 +529,21 @@ namespace System.Windows.Controls.Primitives
         }
 
         // Accessed by ToolBarOverflowPanel
+#if !HAS_UNO
         internal List<UIElement> GeneratedItemsCollection
         {
             get { return _generatedItemsCollection; }
         }
+#else
+        internal List<UIElement>? GeneratedItemsCollection => null;
+#endif
 
         #endregion
 
         #region Data
-
+#if !HAS_UNO
         private List<UIElement> _generatedItemsCollection;
-
+#endif
         #endregion
     }
 }
