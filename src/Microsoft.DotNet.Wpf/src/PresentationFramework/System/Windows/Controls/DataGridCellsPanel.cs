@@ -2440,6 +2440,11 @@ namespace System.Windows.Controls
         {
             get
             {
+#if WINDOWS_APP_SDK
+                // WinUI's FrameworkElement does not expose a public TemplatedParent (WPF/Uno do),
+                // so this presenter-walk is unavailable on that target.
+                return null;
+#else
                 FrameworkElement itemsPresenter = TemplatedParent as FrameworkElement;
                 if (itemsPresenter != null)
                 {
@@ -2447,6 +2452,7 @@ namespace System.Windows.Controls
                 }
 
                 return null;
+#endif
             }
         }
 
