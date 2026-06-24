@@ -7857,7 +7857,13 @@ namespace System.Windows.Controls
                 // do deferred generation
                 DeferAutoGeneration = true;
             }
-            else if (!_measureNeverInvoked)
+            else if (
+#if HAS_UNO
+                true
+#else
+                !_measureNeverInvoked
+#endif
+                )
             {
                 DataGrid.GenerateColumns(
                     itemProperties,
@@ -7875,7 +7881,13 @@ namespace System.Windows.Controls
         /// </summary>
         private void DeleteAutoColumns()
         {
-            if (!DeferAutoGeneration && !_measureNeverInvoked)
+            if (!DeferAutoGeneration &&
+#if HAS_UNO
+                true
+#else
+                !_measureNeverInvoked
+#endif
+                )
             {
                 for (int columnIndex = Columns.Count - 1; columnIndex >= 0; --columnIndex)
                 {
