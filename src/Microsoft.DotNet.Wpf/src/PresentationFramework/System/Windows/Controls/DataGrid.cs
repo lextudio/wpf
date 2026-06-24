@@ -635,6 +635,8 @@ namespace System.Windows.Controls
 #else
                     if (e.Property == DataGridColumn.VisibilityProperty)
                         BuildShimVisualTree();
+                    else if (e.Property == DataGridColumn.WidthProperty && d is DataGridColumn resizedColumn)
+                        ShimApplyColumnWidth(resizedColumn);
 #endif
                 }
             }
