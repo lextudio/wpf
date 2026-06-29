@@ -1926,7 +1926,13 @@ namespace System.Windows.Controls
                 }
                 else
                 {
+#if HAS_UNO
+                    // The WinUI UIElementCollection implements non-generic IList explicitly,
+                    // so the WPF implicit conversion needs an explicit cast here.
+                    return (IList)InternalChildren;
+#else
                     return InternalChildren;
+#endif
                 }
             }
         }
