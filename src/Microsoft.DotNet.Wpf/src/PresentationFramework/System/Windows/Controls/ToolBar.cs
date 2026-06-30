@@ -87,6 +87,10 @@ namespace System.Windows.Controls
         /// </remarks>
         public ToolBar() : base()
         {
+#if HAS_UNO
+            DefaultStyleKey = typeof(ToolBar);
+            UseHorizontalPanelHost();
+#endif
         }
 
         #endregion
