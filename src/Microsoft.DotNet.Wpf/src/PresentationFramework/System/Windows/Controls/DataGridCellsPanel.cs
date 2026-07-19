@@ -2450,6 +2450,15 @@ namespace System.Windows.Controls
                 // WinUI's FrameworkElement does not expose a public TemplatedParent (WPF/Uno do),
                 // so this presenter-walk is unavailable on that target.
                 return null;
+#elif HAS_UNO
+                // TemplatedParent is not populated for ControlTemplates built at runtime via
+                // XamlReader.Load (the mechanism this shim's DataGrid/*Presenter templates use),
+                // so the two-hop TemplatedParent chain below never resolves here (confirmed via
+                // roma.probe.metadata-header-presenter: always null). Reuse the already-proven
+                // ItemsControlSpine.GetItemsOwner visual-tree walk instead — it finds the
+                // nearest ItemsControl ancestor of this IsItemsHost panel directly, without
+                // needing an intermediate ItemsPresenter-shaped element at all.
+                return System.Windows.Controls.ItemsControl.GetItemsOwner(this);
 #else
                 FrameworkElement itemsPresenter = TemplatedParent as FrameworkElement;
                 if (itemsPresenter != null)
