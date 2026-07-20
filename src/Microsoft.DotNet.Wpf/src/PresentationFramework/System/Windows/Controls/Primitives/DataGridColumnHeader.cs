@@ -104,6 +104,14 @@ namespace System.Windows.Controls.Primitives
             _column = column;
             TabIndex = column.DisplayIndex;
 
+#if HAS_UNO
+            // Session 120: PrepareColumnHeader is the one place both the manual
+            // (BuildHeaderRow) and presenter (DataGridColumnHeadersPresenter) generation
+            // paths call — apply the Uno-specific Template/hit-test Background here so
+            // every header gets it regardless of which path constructed it.
+            ApplyShimGridLines();
+#endif
+
             DataGridHelper.TransferProperty(this, ContentProperty);
             DataGridHelper.TransferProperty(this, ContentTemplateProperty);
             DataGridHelper.TransferProperty(this, ContentTemplateSelectorProperty);

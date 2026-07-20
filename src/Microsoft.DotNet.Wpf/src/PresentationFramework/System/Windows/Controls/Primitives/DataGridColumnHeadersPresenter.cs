@@ -235,6 +235,14 @@ namespace System.Windows.Controls.Primitives
                 header.Tracker.Debug_AssertIsInList(_headerTrackingRoot);
 
                 header.PrepareColumnHeader(item, column);
+
+#if HAS_UNO
+                // Session 120 (B1, drag-reorder): this presenter's generation goes through
+                // upstream PrepareContainerForItemOverride, never through the shim's row-realizer
+                // path (ShimOnContainerRealized), so nothing else attaches the DataGrid-level
+                // pointer handlers that drive interactive column drag-reorder. Hook them here.
+                ParentDataGrid?.ShimHookHeaderReorderHandlers(header);
+#endif
             }
         }
 
@@ -251,6 +259,9 @@ namespace System.Windows.Controls.Primitives
 
             if (header != null)
             {
+#if HAS_UNO
+                ParentDataGrid?.ShimUnhookHeaderReorderHandlers(header);
+#endif
                 header.Tracker.StopTracking(ref _headerTrackingRoot);
                 header.ClearHeader();
             }
