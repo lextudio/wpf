@@ -7482,6 +7482,18 @@ namespace System.Windows.Controls
         private void OnItemsGroupDescriptionsChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             EnqueueNewItemMarginComputation();
+#if HAS_UNO
+            // Session 121 (DataGrid grouping): real WPF only auto-syncs grouping sort
+            // descriptions once the user has triggered a column-header sort at least
+            // once through DataGrid's own UI/API (PerformSort sets _sortingStarted).
+            // That means grouping-only consumers (GroupDescriptions added without ever
+            // sorting a column) would silently get no sort sync at all. Since this shim
+            // has no interactive column-header sort click path exercised by most
+            // consumers, treat adding/removing/replacing a GroupDescription itself as
+            // sufficient reason to sync — bypass the gate here rather than require every
+            // grouping consumer to also fake a PerformSort call.
+            _sortingStarted = true;
+#endif
             if (!_sortingStarted)
             {
                 return;
