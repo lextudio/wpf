@@ -1965,11 +1965,27 @@ namespace System.Windows.Controls
                 }
                 if (_internalScrollHost != null)
                 {
+#if HAS_UNO
+                    // Session 121 (frozen columns, Slice 3): real WPF's ContentHorizontalOffset
+                    // is only ever pushed by the classic IScrollInfo/command-queue scrolling
+                    // model (ScrollViewer.OnLayoutUpdated, gated on a queued scroll command) —
+                    // confirmed live via instrumented tracing that it never fires on this Uno
+                    // target, since the native ScrollViewer here is driven by the real native
+                    // scroll/manipulation pipeline instead, which never touches IScrollInfo.
+                    // So a WPF Binding against it is a dead end: it reads 0 once at bind time
+                    // and never updates. Push the live value directly instead, the same way
+                    // ShimHookHeaderScrollSync already does for the pinned header's
+                    // RenderTransform sync — via the ScrollViewer's own ViewChanged event.
+                    _internalScrollHost.ViewChanged += (_, _) =>
+                        SetValue(HorizontalScrollOffsetProperty, _internalScrollHost.HorizontalOffset);
+                    SetValue(HorizontalScrollOffsetProperty, _internalScrollHost.HorizontalOffset);
+#else
                     Binding horizontalOffsetBinding = new Binding("ContentHorizontalOffset")
                     {
                         Source = _internalScrollHost
                     };
                     SetBinding(HorizontalScrollOffsetProperty, horizontalOffsetBinding);
+#endif
                 }
             }
         }
