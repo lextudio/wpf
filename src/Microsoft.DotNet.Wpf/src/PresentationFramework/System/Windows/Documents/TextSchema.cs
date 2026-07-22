@@ -45,7 +45,11 @@ namespace System.Windows.Documents
             DependencyProperty[] textElementPropertyList = new DependencyProperty[]
                 {
                     FrameworkElement.LanguageProperty,
+#if HAS_UNO
+                    Inline.FlowDirectionProperty,
+#else
                     FrameworkElement.FlowDirectionProperty,
+#endif
 #if !HAS_UNO
                     NumberSubstitution.CultureSourceProperty,
                     NumberSubstitution.SubstitutionProperty,
@@ -67,6 +71,7 @@ namespace System.Windows.Documents
             DependencyProperty[] blockPropertyList = new DependencyProperty[]
                 {
                     Block.TextAlignmentProperty,
+                    Block.FlowDirectionProperty,
                     Block.LineHeightProperty,
                     Block.IsHyphenationEnabledProperty,
                 };
@@ -649,6 +654,12 @@ namespace System.Windows.Documents
             {
                 return AreBrushesEqual((Brush)value1, (Brush)value2);
             }
+#if HAS_UNO
+            else if (value1 is global::Windows.UI.Text.FontWeight fontWeight1)
+            {
+                return fontWeight1.Weight == ((global::Windows.UI.Text.FontWeight)value2).Weight;
+            }
+#endif
             else
             {
                 string string1 = value1.ToString();
@@ -1249,7 +1260,11 @@ namespace System.Windows.Documents
         // List of inline properties (both inheritable or non-inheritable) that are "content" properties, not "formatting" properties.
         private static readonly DependencyProperty[] _nonFormattingCharacterProperties = new DependencyProperty[]
             {
+#if HAS_UNO
+                Inline.FlowDirectionProperty,
+#else
                 FrameworkElement.FlowDirectionProperty,
+#endif
                 FrameworkElement.LanguageProperty,
                 Run.TextProperty,
             };

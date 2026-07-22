@@ -174,38 +174,7 @@ namespace System.Windows.Documents
             FontWeight fontWeight = (propertyValue != DependencyProperty.UnsetValue && (FontWeight)propertyValue == FontWeights.Bold) ? FontWeights.Normal : FontWeights.Bold;
 
             TextEditorCharacters._OnApplyProperty(This, TextElement.FontWeightProperty, fontWeight);
-#if HAS_UNO
-            if (!This.Selection.IsEmpty && target is System.Windows.Controls.RichTextBox richTextBox && richTextBox.Document != null)
-            {
-                ApplyPropertyToDocumentInlines(richTextBox.Document, TextElement.FontWeightProperty, fontWeight);
-            }
-#endif
         }
-
-#if HAS_UNO
-        private static void ApplyPropertyToDocumentInlines(FlowDocument document, DependencyProperty property, object value)
-        {
-            foreach (Block block in document.Blocks)
-            {
-                if (block is Paragraph paragraph)
-                {
-                    ApplyPropertyToInlines(paragraph.Inlines, property, value);
-                }
-            }
-        }
-
-        private static void ApplyPropertyToInlines(InlineCollection inlines, DependencyProperty property, object value)
-        {
-            foreach (Inline inline in inlines)
-            {
-                inline.SetValue(property, value);
-                if (inline is Span span)
-                {
-                    ApplyPropertyToInlines(span.Inlines, property, value);
-                }
-            }
-        }
-#endif
 
         /// <summary>
         /// ToggleItalic command event handler.
@@ -225,12 +194,6 @@ namespace System.Windows.Documents
             FontStyle fontStyle = (propertyValue != DependencyProperty.UnsetValue && (FontStyle)propertyValue == FontStyles.Italic) ? FontStyles.Normal : FontStyles.Italic;
 
             TextEditorCharacters._OnApplyProperty(This, TextElement.FontStyleProperty, fontStyle);
-#if HAS_UNO
-            if (!This.Selection.IsEmpty && target is System.Windows.Controls.RichTextBox richTextBox && richTextBox.Document != null)
-            {
-                ApplyPropertyToDocumentInlines(richTextBox.Document, TextElement.FontStyleProperty, fontStyle);
-            }
-#endif
 
             // Update the caret to show it as italic or normal caret.
             This.Selection.RefreshCaret();
@@ -276,12 +239,6 @@ namespace System.Windows.Documents
             }
 
             TextEditorCharacters._OnApplyProperty(This, Inline.TextDecorationsProperty, toggledTextDecorations);
-#if HAS_UNO
-            if (!This.Selection.IsEmpty && target is System.Windows.Controls.RichTextBox richTextBox && richTextBox.Document != null)
-            {
-                ApplyPropertyToDocumentInlines(richTextBox.Document, Inline.TextDecorationsProperty, toggledTextDecorations);
-            }
-#endif
         }
 
         // Command handler for Ctrl+"+" key (non-numpad)

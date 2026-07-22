@@ -757,6 +757,11 @@ namespace System.Windows.Documents
             // because the property is applied to whole List element (to affect bullet appearence)
             if (property == Block.FlowDirectionProperty)
             {
+#if HAS_UNO
+                ListItem listItem = start.GetListAncestor();
+                if (listItem != null && listItem.List != null)
+                {
+#endif
                 // Split any boundary lists if needed.
                 // We want to maintain the invariant that all lists and paragraphs within a list, have the same FlowDirection value.
                 // If paragraph FlowDirection command requests a different value of FlowDirection on parts of a list, 
@@ -768,11 +773,16 @@ namespace System.Windows.Documents
                 }
 
                 // And expand range start to the beginning of the containing list
+#if !HAS_UNO
                 ListItem listItem = start.GetListAncestor();
+#endif
                 if (listItem != null && listItem.List != null)
                 {
                     start = listItem.List.ElementStart;
                 }
+#if HAS_UNO
+                }
+#endif
             }
 
             // Walk all paragraphs in the affected segment. For FlowDirection property, also walk lists.
@@ -782,6 +792,26 @@ namespace System.Windows.Documents
         // Worker for SetParagraphProperty, iterates over Blocks recursively.
         private static void SetParagraphPropertyWorker(TextPointer start, TextPointer end, DependencyProperty property, object value, PropertyValueAction propertyValueAction)
         {
+#if HAS_UNO
+            if (start.TextContainer.Parent is FlowDocument document)
+            {
+                DependencyObject parent = start.TextContainer.Parent;
+                foreach (Block documentBlock in document.Blocks)
+                {
+                    if (documentBlock.ElementEnd.CompareTo(start) < 0 || documentBlock.ElementStart.CompareTo(end) > 0)
+                    {
+                        continue;
+                    }
+
+                    if (TextSchema.IsParagraphOrBlockUIContainer(documentBlock.GetType()))
+                    {
+                        SetPropertyOnParagraphOrBlockUIContainer(parent, documentBlock, property, value, propertyValueAction);
+                    }
+                }
+
+                return;
+            }
+#endif
             Block block = GetNextBlock(start, end);
 
             while (block != null)
@@ -1035,6 +1065,16 @@ namespace System.Windows.Documents
                         break;
                     }
                 }
+#if HAS_UNO
+                else if (pointer.GetPointerContext(LogicalDirection.Forward) == TextPointerContext.ElementStart)
+                {
+                    block = pointer.GetAdjacentElement(LogicalDirection.Forward) as Block;
+                    if (block is Paragraph || block is BlockUIContainer || block is List)
+                    {
+                        break;
+                    }
+                }
+#endif
                 
                 if (TextPointerBase.IsAtPotentialParagraphPosition(pointer))
                 {

@@ -253,8 +253,19 @@ namespace System.Windows.Documents
         /// <summary>
         /// DependencyProperty for <see cref="FlowDirection" /> property.
         /// </summary>
-        public static readonly DependencyProperty FlowDirectionProperty = 
+        public static readonly DependencyProperty FlowDirectionProperty =
+#if HAS_UNO
+                DependencyProperty.Register(
+                        "FlowDirection",
+                        typeof(FlowDirection),
+                        typeof(Block),
+                        new FrameworkPropertyMetadata(
+                                FlowDirection.LeftToRight,
+                                FrameworkPropertyMetadataOptions.Inherits),
+                        new ValidateValueCallback(IsValidFlowDirection));
+#else
                 FrameworkElement.FlowDirectionProperty.AddOwner(typeof(Block));
+#endif
 
         /// <summary>
         /// The FlowDirection property specifies the flow direction of the element.
@@ -517,6 +528,12 @@ namespace System.Windows.Documents
                 || value == TextAlignment.Justify
                 || value == TextAlignment.Left
                 || value == TextAlignment.Right;
+        }
+
+        private static bool IsValidFlowDirection(object o)
+        {
+            FlowDirection value = (FlowDirection)o;
+            return value == FlowDirection.LeftToRight || value == FlowDirection.RightToLeft;
         }
 
         private static bool IsValidWrapDirection(object o)

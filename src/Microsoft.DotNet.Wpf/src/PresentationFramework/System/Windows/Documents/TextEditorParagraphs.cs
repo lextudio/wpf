@@ -137,7 +137,12 @@ namespace System.Windows.Documents
         private static void OnApplyParagraphFlowDirectionLTR(object sender, ExecutedRoutedEventArgs e)
         {
             TextEditor This = TextEditor._GetTextEditor(sender);
-            TextEditorCharacters._OnApplyProperty(This, FrameworkElement.FlowDirectionProperty,
+            TextEditorCharacters._OnApplyProperty(This,
+#if HAS_UNO
+                Block.FlowDirectionProperty,
+#else
+                FrameworkElement.FlowDirectionProperty,
+#endif
                 FlowDirection.LeftToRight, /*applyToParagraphs*/true);
         }
 
@@ -147,7 +152,12 @@ namespace System.Windows.Documents
         private static void OnApplyParagraphFlowDirectionRTL(object sender, ExecutedRoutedEventArgs e)
         {
             TextEditor This = TextEditor._GetTextEditor(sender);
-            TextEditorCharacters._OnApplyProperty(This, FrameworkElement.FlowDirectionProperty,
+            TextEditorCharacters._OnApplyProperty(This,
+#if HAS_UNO
+                Block.FlowDirectionProperty,
+#else
+                FrameworkElement.FlowDirectionProperty,
+#endif
                 FlowDirection.RightToLeft, /*applyToParagraphs*/true);
         }
 
