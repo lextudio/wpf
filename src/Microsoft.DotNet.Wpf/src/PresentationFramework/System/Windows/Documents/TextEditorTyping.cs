@@ -1038,7 +1038,11 @@ namespace System.Windows.Documents
                 return;
             }
 
-            if (This.Selection.IsTableCellRange || !This.AcceptsReturn || !This.UiScope.IsKeyboardFocused)
+            if (This.Selection.IsTableCellRange || !This.AcceptsReturn
+#if !HAS_UNO
+                || !This.UiScope.IsKeyboardFocused
+#endif
+                )
             {
                 return;
             }
@@ -1568,6 +1572,15 @@ namespace System.Windows.Documents
         // the events out of order.
         private static void ScheduleInput(TextEditor This, InputItem item)
         {
+#if HAS_UNO
+            // Uno's dispatcher can run the BackgroundInputCallback before this
+            // method appends the current item to PendingInputItems, which clears
+            // the queue and makes the subsequent Add dereference null. Process
+            // input synchronously until the WPF dispatcher batching contract is
+            // modeled on this target.
+            TextEditorTyping._FlushPendingInputItems(This);
+            item.Do();
+#else
             if (!This.AcceptsRichContent || IsMouseInputPending(This))
             {
                 // We have to do the work now, or we'll get out of synch.
@@ -1588,6 +1601,7 @@ namespace System.Windows.Documents
 
                 threadLocalStore.PendingInputItems.Add(item);
             }
+#endif
         }
 
         // Returns true if any mouse input event is currently waiting in the

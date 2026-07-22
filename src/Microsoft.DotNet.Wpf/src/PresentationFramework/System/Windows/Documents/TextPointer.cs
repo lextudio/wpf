@@ -2513,6 +2513,24 @@ namespace System.Windows.Documents
                 val = parent.GetValue(formattingProperty);
             }
 
+#if HAS_UNO
+            // Uno's DP owner/default metadata bridge does not always flow WPF's
+            // FrameworkElement defaults through FrameworkContentElement/TextElement
+            // owner properties. WPF text editing expects these two values to be
+            // non-null when marking inserted text.
+            if (val == null || val == DependencyProperty.UnsetValue)
+            {
+                if (formattingProperty == FrameworkElement.LanguageProperty)
+                {
+                    val = System.Windows.Markup.XmlLanguage.GetLanguage("en-US");
+                }
+                else if (formattingProperty == FrameworkElement.FlowDirectionProperty)
+                {
+                    val = FlowDirection.LeftToRight;
+                }
+            }
+#endif
+
             return val;
         }
 
