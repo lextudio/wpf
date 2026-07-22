@@ -2025,7 +2025,13 @@ namespace System.Windows.Documents
                 position.MoveToElementEdge(ElementEdge.AfterEnd);
             }
 
-            FlowDirection flowDirection = (FlowDirection)position.GetValue(FlowDocument.FlowDirectionProperty);
+            FlowDirection flowDirection = (FlowDirection)position.GetValue(
+#if HAS_UNO
+                Block.FlowDirectionProperty
+#else
+                FlowDocument.FlowDirectionProperty
+#endif
+                );
 
             return (flowDirection == FlowDirection.RightToLeft);
         }
@@ -2432,7 +2438,13 @@ namespace System.Windows.Documents
                 navigator.MoveToElementEdge(ElementEdge.BeforeStart);
             }
 
-            return (FlowDirection)navigator.GetValue(FrameworkElement.FlowDirectionProperty);
+            return (FlowDirection)navigator.GetValue(
+#if HAS_UNO
+                Block.FlowDirectionProperty
+#else
+                FrameworkElement.FlowDirectionProperty
+#endif
+                );
         }
 
         // Returns the x offset, relative to the left edge of the document

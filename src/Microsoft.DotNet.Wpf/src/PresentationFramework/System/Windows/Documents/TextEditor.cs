@@ -493,13 +493,25 @@ namespace System.Windows.Documents
             }
 
             // Get the current flow direction
-            FlowDirection currentFlowDirection = (FlowDirection)((ITextPointer)range.Start).GetValue(FrameworkElement.FlowDirectionProperty);
+            FlowDirection currentFlowDirection = (FlowDirection)((ITextPointer)range.Start).GetValue(
+#if HAS_UNO
+                Inline.FlowDirectionProperty
+#else
+                FrameworkElement.FlowDirectionProperty
+#endif
+                );
 
             // Set the FlowDirection property properly if the input language's flow direction
             // doesn't match with the current flow direction.
             if (currentFlowDirection != inputFlowDirection)
             {
-                range.ApplyPropertyValue(FrameworkElement.FlowDirectionProperty, inputFlowDirection);
+                range.ApplyPropertyValue(
+#if HAS_UNO
+                    Inline.FlowDirectionProperty,
+#else
+                    FrameworkElement.FlowDirectionProperty,
+#endif
+                    inputFlowDirection);
             }
         }
 

@@ -1229,7 +1229,13 @@ namespace System.Windows.Documents
                     if (This.AcceptsRichContent && (This.Selection is TextSelection))
                     {
                         // NOTE: We do not call OnApplyProperty to avoid recursion for FlushPendingInput
-                        ((TextSelection)This.Selection).ApplyPropertyValue(FlowDocument.FlowDirectionProperty, FlowDirection.LeftToRight, /*applyToParagraphs*/true);
+                        ((TextSelection)This.Selection).ApplyPropertyValue(
+#if HAS_UNO
+                            Block.FlowDirectionProperty,
+#else
+                            FlowDocument.FlowDirectionProperty,
+#endif
+                            FlowDirection.LeftToRight, /*applyToParagraphs*/true);
                     }
                     else
                     {
@@ -1245,7 +1251,13 @@ namespace System.Windows.Documents
                     if (This.AcceptsRichContent && (This.Selection is TextSelection))
                     {
                         // NOTE: We do not call OnApplyProperty to avoid recursion for FlushPendingInput
-                        ((TextSelection)This.Selection).ApplyPropertyValue(FlowDocument.FlowDirectionProperty, FlowDirection.RightToLeft, /*applyToParagraphs*/true);
+                        ((TextSelection)This.Selection).ApplyPropertyValue(
+#if HAS_UNO
+                            Block.FlowDirectionProperty,
+#else
+                            FlowDocument.FlowDirectionProperty,
+#endif
+                            FlowDirection.RightToLeft, /*applyToParagraphs*/true);
                     }
                     else
                     {

@@ -867,7 +867,13 @@ namespace System.Windows.Documents
 
             if (parent != null)
             {
-                parentFlowDirection = (FlowDirection)parent.GetValue(FrameworkElement.FlowDirectionProperty);
+                parentFlowDirection = (FlowDirection)parent.GetValue(
+#if HAS_UNO
+                    FlowDocument.FlowDirectionProperty
+#else
+                    FrameworkElement.FlowDirectionProperty
+#endif
+                    );
             }
             else
             {
@@ -1356,9 +1362,27 @@ namespace System.Windows.Documents
                 return;
             }
 
-            FlowDirection midpointFlowDirection = (FlowDirection)commonAncestor.GetValue(FrameworkElement.FlowDirectionProperty);
-            FlowDirection previousFlowDirection = (FlowDirection)previousRun.GetValue(FrameworkElement.FlowDirectionProperty);
-            FlowDirection nextFlowDirection = (FlowDirection)nextRun.GetValue(FrameworkElement.FlowDirectionProperty);
+            FlowDirection midpointFlowDirection = (FlowDirection)commonAncestor.GetValue(
+#if HAS_UNO
+                Inline.FlowDirectionProperty
+#else
+                FrameworkElement.FlowDirectionProperty
+#endif
+                );
+            FlowDirection previousFlowDirection = (FlowDirection)previousRun.GetValue(
+#if HAS_UNO
+                Inline.FlowDirectionProperty
+#else
+                FrameworkElement.FlowDirectionProperty
+#endif
+                );
+            FlowDirection nextFlowDirection = (FlowDirection)nextRun.GetValue(
+#if HAS_UNO
+                Inline.FlowDirectionProperty
+#else
+                FrameworkElement.FlowDirectionProperty
+#endif
+                );
 
             // If the previous and next content have the same FlowDirection, but their
             // common ancestor differs, we want to merge them.
@@ -1370,7 +1394,13 @@ namespace System.Windows.Documents
                 Inline scopingNextInline = GetScopingFlowDirectionInline(nextRun);
 
                 // Set a single FlowDirection Span over the whole lot of it.
-                SetStructuralInlineProperty(scopingPreviousInline.ElementStart, scopingNextInline.ElementEnd, FrameworkElement.FlowDirectionProperty, previousFlowDirection);
+                SetStructuralInlineProperty(scopingPreviousInline.ElementStart, scopingNextInline.ElementEnd,
+#if HAS_UNO
+                    Inline.FlowDirectionProperty,
+#else
+                    FrameworkElement.FlowDirectionProperty,
+#endif
+                    previousFlowDirection);
             }
         }
 
@@ -1895,7 +1925,13 @@ namespace System.Windows.Documents
 
             Inline inline = run;
 
-            while ((FlowDirection)inline.Parent.GetValue(FrameworkElement.FlowDirectionProperty) == flowDirection)
+            while ((FlowDirection)inline.Parent.GetValue(
+#if HAS_UNO
+                Inline.FlowDirectionProperty
+#else
+                FrameworkElement.FlowDirectionProperty
+#endif
+                ) == flowDirection)
             {
                 inline = (Span)inline.Parent;
             }
@@ -2252,6 +2288,25 @@ namespace System.Windows.Documents
         // Helper that walks paragraphs between start and end positions, applying passed formattingProperty value on them.
         private static void ApplyStructuralInlinePropertyAcrossParagraphs(TextPointer start, TextPointer end, DependencyProperty formattingProperty, object value)
         {
+#if HAS_UNO
+            if (start.Paragraph == null && start.TextContainer.Parent is FlowDocument document)
+            {
+                foreach (Block documentBlock in document.Blocks)
+                {
+                    if (documentBlock.ElementEnd.CompareTo(start) < 0 || documentBlock.ElementStart.CompareTo(end) > 0)
+                    {
+                        continue;
+                    }
+
+                    if (documentBlock is Paragraph paragraph)
+                    {
+                        SetStructuralInlineProperty(paragraph.ContentStart, paragraph.ContentEnd, formattingProperty, value);
+                    }
+                }
+
+                return;
+            }
+#endif
             // We assume to call this method only for paragraph crossing case
             Invariant.Assert(start.Paragraph != null);
             Invariant.Assert(start.Paragraph.ContentEnd.CompareTo(end) < 0);

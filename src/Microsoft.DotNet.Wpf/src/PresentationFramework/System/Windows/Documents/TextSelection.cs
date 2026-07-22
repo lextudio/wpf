@@ -491,12 +491,24 @@ namespace System.Windows.Documents
                         LogicalDirection oppositeDirection = direction == LogicalDirection.Forward ? LogicalDirection.Backward : LogicalDirection.Forward;
 
                         // Check formatting switch condition at this position
-                        FlowDirection initialFlowDirection = (FlowDirection)caretPosition.GetValue(FrameworkElement.FlowDirectionProperty);
+                        FlowDirection initialFlowDirection = (FlowDirection)caretPosition.GetValue(
+#if HAS_UNO
+                            Inline.FlowDirectionProperty
+#else
+                            FrameworkElement.FlowDirectionProperty
+#endif
+                            );
 
                         bool moved = caretPosition.MoveToInsertionPosition(oppositeDirection);
 
                         if (moved &&
-                            initialFlowDirection == (FlowDirection)caretPosition.GetValue(FrameworkElement.FlowDirectionProperty) &&
+                            initialFlowDirection == (FlowDirection)caretPosition.GetValue(
+#if HAS_UNO
+                                Inline.FlowDirectionProperty
+#else
+                                FrameworkElement.FlowDirectionProperty
+#endif
+                                ) &&
                             (caretPosition.GetPointerContext(oppositeDirection) != TextPointerContext.Text ||
                              caretPosition.GetTextInRun(oppositeDirection, charBuffer, 0, 1) != 1 ||
                              !Char.IsWhiteSpace(charBuffer[0])))
@@ -1261,7 +1273,13 @@ namespace System.Windows.Documents
             // Check whether we are in a situation when auto-word formatting must happen
             if (this.IsEmpty && TextSchema.IsCharacterProperty(formattingProperty) &&
                 !applyToParagraphs &&
-                formattingProperty != FrameworkElement.FlowDirectionProperty) // We dont want to apply flowdirection property to inlines when selection is empty.
+                formattingProperty !=
+#if HAS_UNO
+                    Inline.FlowDirectionProperty
+#else
+                    FrameworkElement.FlowDirectionProperty
+#endif
+                ) // We dont want to apply flowdirection property to inlines when selection is empty.
             {
                 TextSegment autoWordRange = TextRangeBase.GetAutoWord(this);
                 if (autoWordRange.IsNull)
@@ -1482,7 +1500,12 @@ namespace System.Windows.Documents
                     {
                         if (_springloadFormatting.ReadLocalValue(inheritableProperties[i]) == DependencyProperty.UnsetValue &&
                             inheritableProperties[i] != FrameworkElement.LanguageProperty &&
-                            inheritableProperties[i] != FrameworkElement.FlowDirectionProperty &&
+                            inheritableProperties[i] !=
+#if HAS_UNO
+                            Inline.FlowDirectionProperty &&
+#else
+                            FrameworkElement.FlowDirectionProperty &&
+#endif
                             System.Windows.DependencyPropertyHelper.GetValueSource(element, inheritableProperties[i]).BaseValueSource != BaseValueSource.Inherited)
                         {
                             object value = parent.GetValue(inheritableProperties[i]);
@@ -2253,7 +2276,13 @@ namespace System.Windows.Documents
             // Get the current flow direction on the selection of interim.
             // This is for getting the right size of distance on the interim character
             // whatever the current flow direction is.
-            FlowDirection flowDirection = (FlowDirection)focusedTextSelection.Start.GetValue(FrameworkElement.FlowDirectionProperty);
+            FlowDirection flowDirection = (FlowDirection)focusedTextSelection.Start.GetValue(
+#if HAS_UNO
+                Inline.FlowDirectionProperty
+#else
+                FrameworkElement.FlowDirectionProperty
+#endif
+                );
 
             ITextPointer nextCharacterPosition;
             Rect nextCharacterRectangle;
@@ -2790,4 +2819,3 @@ namespace System.Windows.Documents
         #endregion Private Fields
     }
 }
-
