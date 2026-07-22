@@ -1094,6 +1094,19 @@ namespace System.Windows.Documents
                 This.Selection.Text = String.Empty;
             }
 
+#if HAS_UNO
+            if (command == EditingCommands.EnterParagraphBreak &&
+                     This.Selection.IsEmpty &&
+                     This.Selection.End is TextPointer unoPosition &&
+                     unoPosition.Paragraph is Paragraph unoParagraph &&
+                     unoParagraph.SiblingBlocks != null)
+            {
+                var nextParagraph = new Paragraph();
+                unoParagraph.SiblingBlocks.InsertAfter(unoParagraph, nextParagraph);
+                This.Selection.Select(nextParagraph.ContentStart, nextParagraph.ContentStart);
+            }
+            else
+#endif
             if (HandleEnterBreakWhenStructuralBoundaryIsCrossed(This, command))
             {
                 // We are crossing structural boundary and
