@@ -251,6 +251,12 @@ namespace System.Windows.Documents
             TextEditorTyping._FlushPendingInputItems(This);
 
             object propertyValue = ((TextSelection)This.Selection).GetCurrentValue(Inline.TextDecorationsProperty);
+#if HAS_UNO
+            if (propertyValue != DependencyProperty.UnsetValue && propertyValue is not TextDecorationCollection)
+            {
+                propertyValue = DependencyProperty.UnsetValue;
+            }
+#endif
             TextDecorationCollection textDecorations = propertyValue != DependencyProperty.UnsetValue ? (TextDecorationCollection)propertyValue : null;
 
             TextDecorationCollection toggledTextDecorations; 
@@ -270,6 +276,12 @@ namespace System.Windows.Documents
             }
 
             TextEditorCharacters._OnApplyProperty(This, Inline.TextDecorationsProperty, toggledTextDecorations);
+#if HAS_UNO
+            if (!This.Selection.IsEmpty && target is System.Windows.Controls.RichTextBox richTextBox && richTextBox.Document != null)
+            {
+                ApplyPropertyToDocumentInlines(richTextBox.Document, Inline.TextDecorationsProperty, toggledTextDecorations);
+            }
+#endif
         }
 
         // Command handler for Ctrl+"+" key (non-numpad)
