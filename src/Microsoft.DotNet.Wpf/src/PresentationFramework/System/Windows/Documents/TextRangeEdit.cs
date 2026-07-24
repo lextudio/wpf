@@ -1258,6 +1258,31 @@ namespace System.Windows.Documents
                 {
                     element.SetValue(property, newValue);
                 }
+
+#if HAS_UNO
+                // Notify the TextContainer that a property changed so the
+                // undo system records a PropertyUndoUnit.  This path replaces
+                // what would otherwise fire through TextElement.OnPropertyChanged,
+                // which is compiled out under #if !HAS_UNO because Uno's
+                // DependencyPropertyChangedEventArgs lacks WPF-only members
+                // (NewValueSource, IsAValueChange, Metadata, etc.).
+                element.NotifyTypographicPropertyChanged(
+                    affectsMeasureOrArrange: true,
+                    localValueChanged: true,
+                    property: property);
+
+                // Create the undo unit directly — OnPropertyChanged would have
+                // called TextTreeUndo.CreatePropertyUndoUnit, but that override
+                // is compiled out.
+                var e = new DependencyPropertyChangedEventArgs
+                {
+                    Property = property,
+                    OldValue = currentValue,
+                    NewValue = newValue,
+                    OldValueSource = BaseValueSourceInternal.Local,
+                };
+                TextTreeUndo.CreatePropertyUndoUnit(element, e);
+#endif
             }
         }
 
