@@ -224,7 +224,24 @@ namespace System.Windows.Documents
                 textElement = position.Parent as TextElement;
                 Invariant.Assert(textElement != null);
 
+#if HAS_UNO
+                // Record the old value before the change so the undo/redo
+                // system can restore it.  This replaces what would otherwise
+                // fire through TextElement.OnPropertyChanged, which is
+                // compiled out under #if !HAS_UNO.
+                object oldValue = textElement.GetValue(property);
+#endif
                 textElement.SetValue(property, value);
+#if HAS_UNO
+                var e = new DependencyPropertyChangedEventArgs
+                {
+                    Property = property,
+                    OldValue = oldValue,
+                    NewValue = value,
+                    OldValueSource = BaseValueSourceInternal.Local,
+                };
+                TextTreeUndo.CreatePropertyUndoUnit(textElement, e);
+#endif
             }
             finally
             {
