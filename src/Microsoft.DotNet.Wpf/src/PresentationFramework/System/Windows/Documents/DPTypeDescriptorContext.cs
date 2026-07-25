@@ -83,6 +83,16 @@ namespace System.Windows.Documents
                 {
                     stringValue = ((FontStretch)propertyValue).ToString();
                 }
+                else if (property == TextElement.ForegroundProperty)
+                {
+                    if (propertyValue is Microsoft.UI.Xaml.Media.SolidColorBrush scb)
+                        stringValue = FormatColor(scb.Color);
+                }
+                else if (property == TextElement.BackgroundProperty)
+                {
+                    if (propertyValue is Microsoft.UI.Xaml.Media.SolidColorBrush scb)
+                        stringValue = FormatColor(scb.Color);
+                }
                 else
 #endif
                 {
@@ -132,6 +142,13 @@ namespace System.Windows.Documents
 
             return stringValue;
         }
+
+#if HAS_UNO
+        private static string FormatColor(global::Windows.UI.Color color)
+        {
+            return $"#{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
+        }
+#endif
 
         private static string CultureInfoFixup(DependencyProperty property, CultureInfo cultureInfo)
         {
