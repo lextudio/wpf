@@ -1109,7 +1109,15 @@ namespace System.Windows.Documents
             else
             {
                 // The elementType does not own this property, so we use the property's registered owner type name.
-                propertyName = $"{property.OwnerType.Name}.{property.Name}";
+                var ownerType = property.OwnerType;
+                if (ownerType != null)
+                {
+                    propertyName = $"{ownerType.Name}.{property.Name}";
+                }
+                else
+                {
+                    propertyName = property.Name;
+                }
             }
 
             return propertyName;

@@ -1458,10 +1458,6 @@ namespace System.Windows.Documents
         {
             NormalizeRange(thisRange);
 
-#if HAS_UNO
-            // XAML serialization isn't enabled in the shim slice.
-            return string.Empty;
-#else
             // Create XmlWriter
             StringWriter stringWriter = new StringWriter(CultureInfo.InvariantCulture);
             XmlTextWriter xmlWriter = new XmlTextWriter(stringWriter);
@@ -1469,41 +1465,30 @@ namespace System.Windows.Documents
             TextRangeSerialization.WriteXaml(xmlWriter, thisRange, /*useFlowDocumentAsRoot:*/false, /*wpfPayload:*/null);
 
             return stringWriter.ToString();
-#endif
         }
 
         internal static bool CanSave(ITextRange thisRange, string dataFormat)
         {
             NormalizeRange(thisRange);
 
-#if HAS_UNO
-            return dataFormat == DataFormats.Text;
-#else
             bool canSave = (
                 dataFormat == DataFormats.Text ||
                 dataFormat == DataFormats.Xaml ||
                 ((dataFormat == DataFormats.XamlPackage ||
                     dataFormat == DataFormats.Rtf)));
-
             return canSave;
-#endif
         }
 
         internal static bool CanLoad(ITextRange thisRange, string dataFormat)
         {
             NormalizeRange(thisRange);
 
-#if HAS_UNO
-            return dataFormat == DataFormats.Text;
-#else
             bool canLoad = (
                 dataFormat == DataFormats.Text ||
                 dataFormat == DataFormats.Xaml ||
                 ((dataFormat == DataFormats.XamlPackage ||
                     dataFormat == DataFormats.Rtf)));
-
             return canLoad;
-#endif
         }
 
         internal static void Save(ITextRange thisRange, Stream stream, string dataFormat, bool preserveTextElements)
@@ -1520,7 +1505,6 @@ namespace System.Windows.Documents
                 textStreamWriter.Write(text);
                 textStreamWriter.Flush();
             }
-#if !HAS_UNO
             else if (dataFormat == DataFormats.Xaml)
             {
                 StreamWriter xamlStreamWriter = new StreamWriter(stream);
@@ -1538,17 +1522,24 @@ namespace System.Windows.Documents
             }
             else if (dataFormat == DataFormats.Rtf)
             {
-                Stream wpfPayloadMemory = null;
-                // Passing null as a wpfPayloadStream we allow to not create wpf package
-                // when it is not needed (there is no images in the range)
-                string xamlText = WpfPayload.SaveRange(thisRange, ref wpfPayloadMemory, /*useFlowDocumentAsRoot:*/false);
-                // Convert xaml to rtf text to set rtf data into data object.
-                string rtfText = TextEditorCopyPaste.ConvertXamlToRtf(xamlText, wpfPayloadMemory);
+                // Use TextRangeSerialization.WriteXaml to produce XAML (the same path
+                // used by DataFormats.Xaml), then convert to RTF.
+                // Under HAS_UNO, WpfPayload.SaveRange is a stub, so we cannot use it.
+                string xamlText;
+                using (var xamlMemory = new System.IO.MemoryStream())
+                {
+                    var xamlWriter = new System.Xml.XmlTextWriter(xamlMemory, System.Text.Encoding.UTF8);
+                    TextRangeSerialization.WriteXaml(xamlWriter, thisRange, /*useFlowDocumentAsRoot:*/false, /*wpfPayload:*/null, preserveTextElements);
+                    xamlWriter.Flush();
+                    xamlMemory.Position = 0;
+                    using var xamlReader = new System.IO.StreamReader(xamlMemory);
+                    xamlText = xamlReader.ReadToEnd();
+                }
+                string rtfText = TextEditorCopyPaste.ConvertXamlToRtf(xamlText, null);
                 StreamWriter rtfStreamWriter = new StreamWriter(stream);
                 rtfStreamWriter.Write(rtfText);
                 rtfStreamWriter.Flush();
             }
-#endif
             else
             {
                 // Unsupported format - thows exception
@@ -1575,7 +1566,6 @@ namespace System.Windows.Documents
                 string text = textStreamReader.ReadToEnd();
                 thisRange.Text = text;
             }
-#if !HAS_UNO
             else if (dataFormat == DataFormats.Xaml)
             {
                 StreamReader xamlStreamReader = new StreamReader(stream);
@@ -1601,14 +1591,14 @@ namespace System.Windows.Documents
                 {
                     throw new ArgumentException(SR.Format(SR.TextRange_UnrecognizedStructureInDataFormat, dataFormat), nameof(stream));
                 }
-                TextElement textElement = WpfPayload.LoadElement(memoryStream) as TextElement;
-                if (!(textElement is Section) && !(textElement is Span))
-                {
-                    throw new ArgumentException(SR.Format(SR.TextRange_UnrecognizedStructureInDataFormat, dataFormat), nameof(stream));
-                }
-                thisRange.SetXmlVirtual(textElement);
+                // ConvertRtfToXaml returns raw XAML text, not a WpfPayload (OPC) package.
+                // Read the XAML as a string and use the Xml property to parse it
+                // (the same approach as the DataFormats.Xaml path).
+                memoryStream.Position = 0;
+                using StreamReader xamlReader = new StreamReader(memoryStream);
+                string xamlText = xamlReader.ReadToEnd();
+                thisRange.Xml = xamlText;
             }
-#endif
             else
             {
                 // Unsupported format - thows exception

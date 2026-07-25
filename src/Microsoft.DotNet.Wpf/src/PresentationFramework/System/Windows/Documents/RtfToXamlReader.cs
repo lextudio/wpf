@@ -3705,6 +3705,7 @@ namespace System.Windows.Documents
                 if (_fontMappings == null)
                 {
                     _fontMappings = new Hashtable();
+#if !HAS_UNO
                     RegistryKey rk = Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\Windows NT\\CurrentVersion\\FontSubstitutes");
                     if (rk != null)
                     {
@@ -3776,8 +3777,9 @@ namespace System.Windows.Documents
                                     }
                                 }
                             }
-                        }
                     }
+                }
+#endif
                 }
 
                 return _fontMappings;

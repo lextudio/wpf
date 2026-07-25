@@ -422,9 +422,6 @@ namespace System.Windows.Documents
         // Converts xaml content to rtf content.
         internal static string ConvertXamlToRtf(string xamlContent, Stream wpfContainerMemory)
         {
-#if HAS_UNO
-            return string.Empty;
-#else
             // Create XamlRtfConverter to process the converting from Xaml to Rtf
             XamlRtfConverter xamlRtfConverter = new XamlRtfConverter();
             if (wpfContainerMemory != null)
@@ -436,14 +433,25 @@ namespace System.Windows.Documents
             string rtfContent = xamlRtfConverter.ConvertXamlToRtf(xamlContent);
 
             return rtfContent;
-#endif // !HAS_UNO
         }
 
         // Converts an rtf content to xaml content.
         internal static MemoryStream ConvertRtfToXaml(string rtfContent)
         {
 #if HAS_UNO
-            return null;
+            // Under HAS_UNO, WpfPayload (OPC package support) is stubbed.
+            // Use XamlRtfConverter directly without the WpfPayload container.
+            XamlRtfConverter xamlRtfConverter = new XamlRtfConverter();
+            string xamlContent = xamlRtfConverter.ConvertRtfToXaml(rtfContent);
+            if (string.IsNullOrEmpty(xamlContent))
+                return null;
+            var ms = new MemoryStream();
+            using (var sw = new StreamWriter(ms, System.Text.Encoding.UTF8, 1024, leaveOpen: true))
+            {
+                sw.Write(xamlContent);
+            }
+            ms.Position = 0;
+            return ms;
 #else
             MemoryStream memoryStream = new MemoryStream();
             WpfPayload wpfPayload = WpfPayload.CreateWpfPayload(memoryStream);

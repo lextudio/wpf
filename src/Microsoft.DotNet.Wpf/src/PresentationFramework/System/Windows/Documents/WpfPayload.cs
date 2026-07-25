@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using MS.Internal; // Invariant
-using MS.Internal.IO.Packaging;
 using System.Xml;
 using System.Windows.Markup; // TypeConvertContext, ParserContext
 using System.Windows.Controls; // Image
@@ -13,6 +12,8 @@ using System.Windows.Media.Imaging; // BitmapEncoder
 using System.IO; // MemoryStream
 using System.IO.Packaging; // Package
 using System.Threading; // Interlocked.Increment
+using Image = System.Windows.Controls.Image;
+using Package = System.IO.Packaging.Package;
 
 //
 // Description: Helper class for creating and accessing WPF Payloads in packages
