@@ -67,14 +67,34 @@ namespace System.Windows.Documents
 
             if (stringValue == null)
             {
-                DPTypeDescriptorContext context = new DPTypeDescriptorContext(property, propertyValue);
-
-                System.ComponentModel.TypeConverter typeConverter = System.ComponentModel.TypeDescriptor.GetConverter(property.PropertyType);
-                Invariant.Assert(typeConverter != null);
-                if (typeConverter.CanConvertTo(context, typeof(string)))
+#if HAS_UNO
+                // WinRT-aliased structs (FontWeight, FontStyle, FontStretch) don't have
+                // TypeConverter attributes, so TypeDescriptor.GetConverter returns a
+                // default converter that CanConvertTo(string)=false. Route through shims.
+                if (property == TextElement.FontWeightProperty)
                 {
-                    stringValue = (string)typeConverter.ConvertTo(
-                        context, System.Globalization.CultureInfo.InvariantCulture, propertyValue, typeof(string));
+                    stringValue = new System.Windows.Media.FontWeightConverter().ConvertToInvariantString(propertyValue);
+                }
+                else if (property == TextElement.FontStyleProperty)
+                {
+                    stringValue = new System.Windows.Media.FontStyleConverter().ConvertToInvariantString(propertyValue);
+                }
+                else if (property == TextElement.FontStretchProperty)
+                {
+                    stringValue = ((FontStretch)propertyValue).ToString();
+                }
+                else
+#endif
+                {
+                    DPTypeDescriptorContext context = new DPTypeDescriptorContext(property, propertyValue);
+
+                    System.ComponentModel.TypeConverter typeConverter = System.ComponentModel.TypeDescriptor.GetConverter(property.PropertyType);
+                    Invariant.Assert(typeConverter != null);
+                    if (typeConverter.CanConvertTo(context, typeof(string)))
+                    {
+                        stringValue = (string)typeConverter.ConvertTo(
+                            context, System.Globalization.CultureInfo.InvariantCulture, propertyValue, typeof(string));
+                    }
                 }
             }
             return stringValue;
