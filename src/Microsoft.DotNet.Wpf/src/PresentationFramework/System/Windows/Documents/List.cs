@@ -234,9 +234,6 @@ namespace System.Windows.Documents
         /// <param name="lastBlock"></param>
         internal void Apply(Block firstBlock, Block lastBlock)
         {
-#if HAS_UNO
-            throw new NotSupportedException("List.Apply requires the WPF text tree and is not available in UnoRichText yet.");
-#else
             Invariant.Assert(this.Parent == null, "Cannot Apply List Because It Is Inserted In The Tree Already.");
             Invariant.Assert(this.IsEmpty, "Cannot Apply List Because It Is Not Empty.");
             Invariant.Assert(firstBlock.Parent == lastBlock.Parent, "Cannot Apply List Because Block Are Not Siblings.");
@@ -298,7 +295,6 @@ namespace System.Windows.Documents
             {
                 textContainer.EndChange();
             }
-#endif
         }
 
         #endregion Internal Methods
