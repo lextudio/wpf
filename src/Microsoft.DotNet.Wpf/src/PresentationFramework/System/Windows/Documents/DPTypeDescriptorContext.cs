@@ -98,6 +98,23 @@ namespace System.Windows.Documents
                     if (propertyValue is Microsoft.UI.Xaml.Media.SolidColorBrush scb)
                         stringValue = FormatColor(scb.Color);
                 }
+                else if (property.PropertyType == typeof(Thickness))
+                {
+                    // The Thickness struct's [TypeConverter] attribute is not picked
+                    // up by TypeDescriptor under Uno, so the default converter returns
+                    // ToString() ("[Thickness: ...]") instead of "left,top,right,bottom".
+                    // Route through the shim converter to emit the comma-separated form
+                    // that WriteXaml consumers (e.g. XamlToRtfWriter.ConvertToThickness) expect.
+                    if (propertyValue is Thickness thickness)
+                    {
+                        var culture = CultureInfo.InvariantCulture;
+                        stringValue = string.Join(",",
+                            thickness.Left.ToString(culture),
+                            thickness.Top.ToString(culture),
+                            thickness.Right.ToString(culture),
+                            thickness.Bottom.ToString(culture));
+                    }
+                }
                 else
 #endif
                 {
