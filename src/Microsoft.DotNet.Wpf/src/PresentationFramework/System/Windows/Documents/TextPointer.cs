@@ -2514,6 +2514,15 @@ namespace System.Windows.Documents
             }
 
 #if HAS_UNO
+            if (parent != null && IsInheritableTextProperty(formattingProperty))
+            {
+                object inherited = GetInheritedValue(parent, formattingProperty);
+                if (inherited != DependencyProperty.UnsetValue)
+                {
+                    val = inherited;
+                }
+            }
+
             // Uno's DP owner/default metadata bridge does not always flow WPF's
             // FrameworkElement defaults through FrameworkContentElement/TextElement
             // owner properties. WPF text editing expects these two values to be
@@ -2533,6 +2542,56 @@ namespace System.Windows.Documents
 
             return val;
         }
+
+#if HAS_UNO
+        // WPF flows inheritable text properties through DP inheritance; Uno's DP
+        // system has no inheritance (effective values are only Default/Local, see
+        // PropertySystem.cs). Reimplement the inheritance walk here so that WPF
+        // text-editing code (WriteXaml, ToggleBold, ...) sees WPF-shaped values,
+        // e.g. a Run nested inside a <Bold> span reports FontWeight=Bold instead
+        // of Normal. Only inheritable properties participate; non-inheritable ones
+        // (TextDecorations, Background, ...) must keep their local-only semantics.
+        private static readonly System.Collections.Generic.HashSet<DependencyProperty> s_inheritableTextProperties
+            = new System.Collections.Generic.HashSet<DependencyProperty>(BuildInheritableTextProperties());
+
+        private static System.Collections.Generic.IEnumerable<DependencyProperty> BuildInheritableTextProperties()
+        {
+            foreach (Type type in new[] { typeof(TextElement), typeof(Block), typeof(FlowDocument) })
+            {
+                foreach (DependencyProperty dp in TextSchema.GetInheritableProperties(type))
+                {
+                    yield return dp;
+                }
+            }
+        }
+
+        private static bool IsInheritableTextProperty(DependencyProperty dp)
+        {
+            return s_inheritableTextProperties.Contains(dp);
+        }
+
+        private object GetInheritedValue(DependencyObject scoping, DependencyProperty dp)
+        {
+            // A local value on the scoping element wins; nothing to inherit.
+            if (scoping.ReadLocalValue(dp) != DependencyProperty.UnsetValue)
+            {
+                return DependencyProperty.UnsetValue;
+            }
+
+            DependencyObject current = (scoping as TextElement)?.Parent;
+            while (current != null)
+            {
+                if (current.ReadLocalValue(dp) != DependencyProperty.UnsetValue)
+                {
+                    return current.GetValue(dp);
+                }
+
+                current = (current as TextElement)?.Parent;
+            }
+
+            return DependencyProperty.UnsetValue;
+        }
+#endif
 
         object ITextPointer.ReadLocalValue(DependencyProperty formattingProperty)
         {
