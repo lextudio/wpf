@@ -83,6 +83,11 @@ namespace System.Windows.Documents
                 {
                     stringValue = ((FontStretch)propertyValue).ToString();
                 }
+                else if (property == TextElement.FontFamilyProperty)
+                {
+                    if (propertyValue is Microsoft.UI.Xaml.Media.FontFamily ff)
+                        stringValue = ff.Source ?? string.Empty;
+                }
                 else if (property == TextElement.ForegroundProperty)
                 {
                     if (propertyValue is Microsoft.UI.Xaml.Media.SolidColorBrush scb)
@@ -138,6 +143,26 @@ namespace System.Windows.Documents
             else if (textDecorations.Count == 0)
             {
                 stringValue = string.Empty;
+            }
+            else
+            {
+                // Combined collections (e.g. Underline + Strikethrough) serialize
+                // as a comma-separated list, mirroring WPF's string format.
+                var names = new global::System.Collections.Generic.List<string>();
+                foreach (var dec in textDecorations)
+                {
+                    switch (dec.Location)
+                    {
+                        case Media.TextDecorationLocation.Underline: names.Add("Underline"); break;
+                        case Media.TextDecorationLocation.Strikethrough: names.Add("Strikethrough"); break;
+                        case Media.TextDecorationLocation.Overline: names.Add("OverLine"); break;
+                        case Media.TextDecorationLocation.Baseline: names.Add("Baseline"); break;
+                    }
+                }
+                if (names.Count > 0)
+                {
+                    stringValue = string.Join(", ", names);
+                }
             }
 
             return stringValue;

@@ -2862,6 +2862,17 @@ namespace System.Windows.Documents
 
                         if (xamlToRtfError == XamlToRtfError.None)
                         {
+#if HAS_UNO
+                            // WinRT shims serialize attached/owner-qualified properties as
+                            // "Owner.Property" (e.g. TextElement.FontSize="14"). The WPF
+                            // AttributeTable only knows the short name, so strip the owner
+                            // prefix before lookup. "xml:lang"/"xml:space" carry no dot.
+                            int dot = newLocalName.LastIndexOf('.');
+                            if (dot >= 0)
+                            {
+                                newLocalName = newLocalName.Substring(dot + 1);
+                            }
+#endif
                             xamlToRtfError = attributes.GetValue(i, ref valueString);
 
                             if (xamlToRtfError == XamlToRtfError.None &&
