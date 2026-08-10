@@ -1099,7 +1099,6 @@ namespace System.Windows.Documents
         // List of all non-inheritable properties applicable to TableCell element
         private static readonly DependencyProperty[] _tableCellProperties = new DependencyProperty[]
             {
-#if !HAS_UNO
                 TableCell.ColumnSpanProperty,
                 TableCell.RowSpanProperty,
 
@@ -1107,7 +1106,6 @@ namespace System.Windows.Documents
                 TableCell.PaddingProperty,
                 TableCell.BorderThicknessProperty,
                 TableCell.BorderBrushProperty,
-#endif
 
                 // Inherits TextElement properties
                 TextElement.BackgroundProperty,
