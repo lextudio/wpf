@@ -3412,6 +3412,7 @@ namespace System.Windows.Documents
                 new LookupTableEntry("TargetName",          (int)XamlAttribute.XATargetName),
                 new LookupTableEntry("LineHeight",          (int)XamlAttribute.XALineHeight),
                 new LookupTableEntry("xml:lang",            (int)XamlAttribute.XALang),
+                new LookupTableEntry("Language",            (int)XamlAttribute.XALang),
                 new LookupTableEntry("Height",              (int)XamlAttribute.XAHeight),
                 new LookupTableEntry("Source",              (int)XamlAttribute.XASource),
                 new LookupTableEntry("UriSource",           (int)XamlAttribute.XAUriSource),
