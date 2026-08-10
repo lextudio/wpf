@@ -1138,10 +1138,19 @@ namespace System.Windows.Documents
                 object propertyValue = element.ReadLocalValue(property);
                 if (propertyValue != null && propertyValue != DependencyProperty.UnsetValue)
                 {
+#if HAS_UNO
+                    // WinRT-aliased structs (GridLength, brushes) don't expose the
+                    // TypeConverter attributes TypeDescriptor relies on, so route
+                    // through the same shim GetStringValue uses for inheritable
+                    // properties (e.g. TableColumn.Width emits "100" like WPF's
+                    // GridLengthConverter instead of "100px").
+                    string stringValue = DPTypeDescriptorContext.GetStringValue(property, propertyValue);
+#else
                     System.ComponentModel.TypeConverter typeConverter = System.ComponentModel.TypeDescriptor.GetConverter(property.PropertyType);
                     Invariant.Assert(typeConverter != null, "typeConverter==null: is not expected for atomic elements");
                     Invariant.Assert(typeConverter.CanConvertTo(typeof(string)), "type is expected to be convertable into string type");
                     string stringValue = (string)typeConverter.ConvertTo(/*ITypeDescriptorContext:*/null, CultureInfo.InvariantCulture, propertyValue, typeof(string));
+#endif
                     Invariant.Assert(stringValue != null, "expecting non-null stringValue");
                     xmlWriter.WriteAttributeString(property.Name, stringValue);
                 }

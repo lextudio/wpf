@@ -115,6 +115,28 @@ namespace System.Windows.Documents
                             thickness.Bottom.ToString(culture));
                     }
                 }
+                else if (property == TableColumn.WidthProperty)
+                {
+                    // WinUI's GridLength converter emits "100px"; WPF's
+                    // GridLengthConverter emits the bare number for Pixel/Star
+                    // ("100", "100*") and "Auto". Emit the WPF form so
+                    // XamlToRtfWriter.ConvertToX / StringToDouble can parse it.
+                    if (propertyValue is GridLength gridLength)
+                    {
+                        if (gridLength.IsAuto)
+                        {
+                            stringValue = "Auto";
+                        }
+                        else if (gridLength.IsStar)
+                        {
+                            stringValue = gridLength.Value.ToString(CultureInfo.InvariantCulture) + "*";
+                        }
+                        else
+                        {
+                            stringValue = gridLength.Value.ToString(CultureInfo.InvariantCulture);
+                        }
+                    }
+                }
                 else
 #endif
                 {
