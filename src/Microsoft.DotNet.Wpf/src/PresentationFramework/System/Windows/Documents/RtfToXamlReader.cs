@@ -8633,6 +8633,111 @@ namespace System.Windows.Documents
 
             bool skipImage = (formatState.ImageScaleWidth < 0) || (formatState.ImageScaleHeight < 0);
 
+#if HAS_UNO
+            if (contentType != string.Empty && !skipImage)
+            {
+                // Under HAS_UNO there is no WpfPayload package: capture the \pict
+                // bytes and emit a self-contained data-URI <Image> instead.
+                byte[] imageData;
+                using (var imageStream = new MemoryStream())
+                {
+                    if (formatState.ImageFormat != RtfImageFormat.Wmf)
+                    {
+                        // Write the image binary data from Rtf image data
+                        _lexer.WriteImageData(imageStream, formatState.IsImageDataBinary);
+                    }
+                    else
+                    {
+                        // Windows metafiles are a legacy niche; SystemDrawingHelper
+                        // is stubbed under HAS_UNO, so nothing is produced.
+                        MemoryStream metafileStream = new MemoryStream();
+                        using (metafileStream)
+                        {
+                            _lexer.WriteImageData(metafileStream, formatState.IsImageDataBinary);
+                            metafileStream.Position = 0;
+                            SystemDrawingHelper.SaveMetafileToImageStream(metafileStream, imageStream);
+                        }
+                    }
+                    imageData = imageStream.ToArray();
+                }
+
+                if (imageData.Length > 0)
+                {
+                    _imageCount++;
+                    string imageSource = "data:" + contentType + ";base64," + Convert.ToBase64String(imageData);
+                    formatState.ImageSource = imageSource;
+                    imagePartUriString = imageSource;
+
+                    // Create the image document node
+                    DocumentNode dnImage = new DocumentNode(DocumentNodeType.dnImage)
+                    {
+                        FormatState = formatState
+                    };
+
+                    StringBuilder imageStringBuilder = new StringBuilder();
+
+                    // Add the xaml image element
+                    imageStringBuilder.Append("<Image ");
+
+                    // Add the xaml image width property
+                    imageStringBuilder.Append(" Width=\"");
+                    double width;
+                    if (formatState.ImageScaleWidth != 0)
+                    {
+                        width = formatState.ImageWidth * (formatState.ImageScaleWidth / 100);
+                    }
+                    else
+                    {
+                        width = formatState.ImageWidth;
+                    }
+                    imageStringBuilder.Append(width.ToString(CultureInfo.InvariantCulture));
+                    imageStringBuilder.Append('"');
+
+                    // Add the xaml image height property
+                    imageStringBuilder.Append(" Height=\"");
+                    double height = formatState.ImageHeight * (formatState.ImageScaleHeight / 100);
+                    if (formatState.ImageScaleHeight != 0)
+                    {
+                        height = formatState.ImageHeight * (formatState.ImageScaleHeight / 100);
+                    }
+                    else
+                    {
+                        height = formatState.ImageHeight;
+                    }
+                    imageStringBuilder.Append(height.ToString(CultureInfo.InvariantCulture));
+                    imageStringBuilder.Append('"');
+
+                    // Add the xaml image stretch property
+                    imageStringBuilder.Append(" Stretch=\"Fill");
+                    imageStringBuilder.Append('"');
+
+                    // Add the self-contained data-URI source
+                    imageStringBuilder.Append(" Source=\"");
+                    imageStringBuilder.Append(imageSource);
+                    imageStringBuilder.Append('"');
+
+                    // Add the xaml image close tag
+                    imageStringBuilder.Append("/>");
+
+                    // Set Xaml for image element
+                    dnImage.Xaml = imageStringBuilder.ToString();
+
+                    // Insert the image document node to the document node array
+                    DocumentNodeArray dna = _converterState.DocumentNodeArray;
+                    dna.Push(dnImage);
+                    dna.CloseAt(dna.Count - 1);
+                }
+                else
+                {
+                    _lexer.AdvanceForImageData();
+                }
+            }
+            else
+            {
+                // Skip the image data if the image type is unknown or image data is empty
+                _lexer.AdvanceForImageData();
+            }
+#else
             if (_wpfPayload != null && contentType != string.Empty && !skipImage)
             {
                 // Get image part URI string and image binary steam to write Rtf image data
@@ -8751,6 +8856,7 @@ namespace System.Windows.Documents
                 // Skip the image data if the image type is unknown or WpfPayload is null
                 _lexer.AdvanceForImageData();
             }
+#endif
         }
 
         private void ConvertSymbolCharValueToText(DocumentNode dn, int nChar, EncodeType encodeType)

@@ -597,6 +597,25 @@ namespace System.Windows.Documents
                 // Write the columns text.
                 WriteTableColumnsInformation(range, (Table)((TextPointer)textReader).Parent, xmlWriter, xamlTypeMapper);
             }
+
+#if HAS_UNO
+            // Under HAS_UNO the InlineUIContainer/BlockUIContainer Child is stored
+            // outside the TextContainer (the WPF Child setter's InsertUIElement is
+            // not wired up), so the TextPointer walk never reaches the embedded
+            // element. Serialize an Image child explicitly, regardless of whether
+            // the container itself was reduced to Run/Paragraph.
+            if (elementType == typeof(InlineUIContainer) || elementType == typeof(BlockUIContainer))
+            {
+                FrameworkContentElement container = textReader.GetAdjacentElement(LogicalDirection.Backward) as FrameworkContentElement;
+                UIElement child = container is InlineUIContainer inlineContainer ? inlineContainer.Child
+                    : container is BlockUIContainer blockContainer ? blockContainer.Child
+                    : null;
+                if (child is global::System.Windows.Controls.Image)
+                {
+                    WriteEmbeddedObject(child, xmlWriter, /*wpfPayload:*/null);
+                }
+            }
+#endif
         }
 
         // Write columns related to the given table cell range.
@@ -1171,7 +1190,37 @@ namespace System.Windows.Documents
         /// </param>
         private static void WriteEmbeddedObject(object embeddedObject, XmlWriter xmlWriter, WpfPayload wpfPayload)
         {
-#if !HAS_UNO
+#if HAS_UNO
+            // Under HAS_UNO there is no OPC package, so WPF's package-URI image
+            // path can't run. Instead encode the bitmap pixels to PNG and embed
+            // them as a self-contained data URI that the RTF converter's \pict
+            // writer (and the shim XamlReader) understand.
+            if (embeddedObject is global::System.Windows.Controls.Image image &&
+                image.Source is System.Windows.Media.Imaging.BitmapSource bitmapSource &&
+                bitmapSource.PixelWidth > 0 && bitmapSource.PixelHeight > 0)
+            {
+                using var imageStream = new System.IO.MemoryStream();
+                System.Windows.Media.Imaging.PngBitmapEncoder encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
+                encoder.Initialize(bitmapSource);
+                encoder.Save(imageStream);
+                if (imageStream.Length > 0)
+                {
+                    var culture = CultureInfo.InvariantCulture;
+                    double width = image.Width > 0 ? image.Width : bitmapSource.Width;
+                    double height = image.Height > 0 ? image.Height : bitmapSource.Height;
+                    xmlWriter.WriteStartElement(nameof(global::System.Windows.Controls.Image));
+                    xmlWriter.WriteAttributeString("Width", width.ToString(culture));
+                    xmlWriter.WriteAttributeString("Height", height.ToString(culture));
+                    xmlWriter.WriteAttributeString("Source", "data:image/png;base64," + Convert.ToBase64String(imageStream.ToArray()));
+                    xmlWriter.WriteEndElement();
+                    return;
+                }
+            }
+
+            // In non-package mode we ignore all other UIElements.
+            // Output a space replacing this embedded element.
+            xmlWriter.WriteString(" ");
+#else
             if (wpfPayload != null && embeddedObject is Image)
             {
                 // Writing in WPF mode: need to create an image with a Source referring into a package
@@ -1225,16 +1274,7 @@ namespace System.Windows.Documents
                     }
                 }
             }
-            else
 #endif
-            {
-                // In non-package mode we ignore all UIElements.
-                // Output a space replacing this embedded element.
-                // Note that in this mode (DataFormats.Xaml) InlineUIContainer was
-                // replaced by Run and BlockUIContainer - by Paragraph,
-                // so the space output here will be significant.
-                xmlWriter.WriteString(" ");
-            }
         }
 
         // .............................................................

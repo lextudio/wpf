@@ -2008,6 +2008,16 @@ namespace System.Windows.Documents
         // Write image control and image hex data to the rtf content
         private void WriteImage(DocumentNode documentNode)
         {
+#if HAS_UNO
+            // The shim serializes embedded images as self-contained data URIs
+            // ("data:image/png;base64,...") instead of package URIs, so there is
+            // no WpfPayload to read from.
+            if (documentNode.FormatState.ImageSource?.StartsWith("data:image/", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                WriteShapeImageFromDataUri(documentNode);
+                return;
+            }
+#endif
             if (_wpfPayload == null)
             {
                 // Package is not available. Skip the image.
@@ -2038,6 +2048,46 @@ namespace System.Windows.Documents
             WriteNoneShapeImage(documentNode, imageStream, imageFormat);
 #endif // WindowsMetaFile
         }
+
+#if HAS_UNO
+        // Writes a \pict image whose bytes came from a self-contained data URI
+        // in the intermediate XAML (no WpfPayload package under HAS_UNO).
+        private void WriteShapeImageFromDataUri(DocumentNode documentNode)
+        {
+            string source = documentNode.FormatState.ImageSource;
+            int comma = source.IndexOf(',');
+            if (comma < 0)
+            {
+                return;
+            }
+
+            string meta = source.Substring(5, comma - 5);
+            int slash = meta.IndexOf('/');
+            int semi = meta.IndexOf(';');
+            if (slash < 0 || semi < 0)
+            {
+                return;
+            }
+
+            string formatName = meta.Substring(slash + 1, semi - slash - 1);
+            RtfImageFormat imageFormat = formatName.Equals("jpeg", StringComparison.OrdinalIgnoreCase) || formatName.Equals("jpg", StringComparison.OrdinalIgnoreCase)
+                ? RtfImageFormat.Jpeg
+                : RtfImageFormat.Png;
+
+            byte[] data;
+            try
+            {
+                data = Convert.FromBase64String(source.Substring(comma + 1));
+            }
+            catch (System.FormatException)
+            {
+                return;
+            }
+
+            using var imageStream = new MemoryStream(data, writable: false);
+            WriteShapeImage(documentNode, imageStream, imageFormat);
+        }
+#endif
 
         // Write the shape image with control "\shppict"
         private void WriteShapeImage(DocumentNode documentNode, Stream imageStream, RtfImageFormat imageFormat)
