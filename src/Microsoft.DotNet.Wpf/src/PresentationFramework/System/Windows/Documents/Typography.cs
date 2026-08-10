@@ -1823,7 +1823,8 @@ namespace System.Windows.Documents
                         _typeofThis,
                         new FrameworkPropertyMetadata(
                                 FontVariants.Normal,
-                                FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender | FrameworkPropertyMetadataOptions.Inherits));
+                                FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender | FrameworkPropertyMetadataOptions.Inherits),
+                        null);
 
         /// <summary> Capitals Property </summary>
         public static readonly DependencyProperty CapitalsProperty =

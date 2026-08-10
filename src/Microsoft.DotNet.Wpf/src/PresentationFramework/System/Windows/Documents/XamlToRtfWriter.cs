@@ -3421,7 +3421,8 @@ namespace System.Windows.Documents
                 // Complex Attributes
                 new LookupTableEntry("Location",            (int)XamlAttribute.XALocation),
                 new LookupTableEntry("Width",               (int)XamlAttribute.XAWidth),
-                new LookupTableEntry("Typography.Variants", (int)XamlAttribute.XATypographyVariants)
+                new LookupTableEntry("Typography.Variants", (int)XamlAttribute.XATypographyVariants),
+                new LookupTableEntry("Variants",            (int)XamlAttribute.XATypographyVariants)
             };
 
             internal static LookupTableEntry[] MarkerStyleTable =
