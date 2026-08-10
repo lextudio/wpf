@@ -98,6 +98,11 @@ namespace System.Windows.Documents
                     if (propertyValue is Microsoft.UI.Xaml.Media.SolidColorBrush scb)
                         stringValue = FormatColor(scb.Color);
                 }
+                else if (property == Block.BorderBrushProperty || property == ListItem.BorderBrushProperty)
+                {
+                    if (propertyValue is Microsoft.UI.Xaml.Media.SolidColorBrush scb)
+                        stringValue = FormatColor(scb.Color);
+                }
                 else if (property.PropertyType == typeof(Thickness))
                 {
                     // The Thickness struct's [TypeConverter] attribute is not picked
