@@ -14,7 +14,7 @@ namespace System.Windows.Documents
     /// An object implementing ITypeDescriptorContext intended to be used in serialization
     /// scenarios for checking whether a particular value can be converted to a string
     /// </summary>
-    internal class DPTypeDescriptorContext : System.ComponentModel.ITypeDescriptorContext
+    internal partial class DPTypeDescriptorContext : System.ComponentModel.ITypeDescriptorContext
     {
         //------------------------------------------------------
         //
@@ -70,79 +70,9 @@ namespace System.Windows.Documents
 #if HAS_UNO
                 // WinRT-aliased structs (FontWeight, FontStyle, FontStretch) don't have
                 // TypeConverter attributes, so TypeDescriptor.GetConverter returns a
-                // default converter that CanConvertTo(string)=false. Route through shims.
-                if (property == TextElement.FontWeightProperty)
-                {
-                    stringValue = new System.Windows.Media.FontWeightConverter().ConvertToInvariantString(propertyValue);
-                }
-                else if (property == TextElement.FontStyleProperty)
-                {
-                    stringValue = new System.Windows.Media.FontStyleConverter().ConvertToInvariantString(propertyValue);
-                }
-                else if (property == TextElement.FontStretchProperty)
-                {
-                    stringValue = ((FontStretch)propertyValue).ToString();
-                }
-                else if (property == TextElement.FontFamilyProperty)
-                {
-                    if (propertyValue is Microsoft.UI.Xaml.Media.FontFamily ff)
-                        stringValue = ff.Source ?? string.Empty;
-                }
-                else if (property == TextElement.ForegroundProperty)
-                {
-                    if (propertyValue is Microsoft.UI.Xaml.Media.SolidColorBrush scb)
-                        stringValue = FormatColor(scb.Color);
-                }
-                else if (property == TextElement.BackgroundProperty)
-                {
-                    if (propertyValue is Microsoft.UI.Xaml.Media.SolidColorBrush scb)
-                        stringValue = FormatColor(scb.Color);
-                }
-                else if (property == Block.BorderBrushProperty || property == ListItem.BorderBrushProperty)
-                {
-                    if (propertyValue is Microsoft.UI.Xaml.Media.SolidColorBrush scb)
-                        stringValue = FormatColor(scb.Color);
-                }
-                else if (property.PropertyType == typeof(Thickness))
-                {
-                    // The Thickness struct's [TypeConverter] attribute is not picked
-                    // up by TypeDescriptor under Uno, so the default converter returns
-                    // ToString() ("[Thickness: ...]") instead of "left,top,right,bottom".
-                    // Route through the shim converter to emit the comma-separated form
-                    // that WriteXaml consumers (e.g. XamlToRtfWriter.ConvertToThickness) expect.
-                    if (propertyValue is Thickness thickness)
-                    {
-                        var culture = CultureInfo.InvariantCulture;
-                        stringValue = string.Join(",",
-                            thickness.Left.ToString(culture),
-                            thickness.Top.ToString(culture),
-                            thickness.Right.ToString(culture),
-                            thickness.Bottom.ToString(culture));
-                    }
-                }
-                else if (property == TableColumn.WidthProperty)
-                {
-                    // WinUI's GridLength converter emits "100px"; WPF's
-                    // GridLengthConverter emits the bare number for Pixel/Star
-                    // ("100", "100*") and "Auto". Emit the WPF form so
-                    // XamlToRtfWriter.ConvertToX / StringToDouble can parse it.
-                    if (propertyValue is GridLength gridLength)
-                    {
-                        if (gridLength.IsAuto)
-                        {
-                            stringValue = "Auto";
-                        }
-                        else if (gridLength.IsStar)
-                        {
-                            stringValue = gridLength.Value.ToString(CultureInfo.InvariantCulture) + "*";
-                        }
-                        else
-                        {
-                            stringValue = gridLength.Value.ToString(CultureInfo.InvariantCulture);
-                        }
-                    }
-                }
-                else
+                // default converter that CanConvertTo(string)=false. The Uno-specific
+                // converter routing lives in DPTypeDescriptorContext.uno.cs.
+                if (!TryGetShimStringValue(property, propertyValue, out stringValue))
 #endif
                 {
                     DPTypeDescriptorContext context = new DPTypeDescriptorContext(property, propertyValue);
@@ -211,13 +141,6 @@ namespace System.Windows.Documents
 
             return stringValue;
         }
-
-#if HAS_UNO
-        private static string FormatColor(global::Windows.UI.Color color)
-        {
-            return $"#{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
-        }
-#endif
 
         private static string CultureInfoFixup(DependencyProperty property, CultureInfo cultureInfo)
         {
