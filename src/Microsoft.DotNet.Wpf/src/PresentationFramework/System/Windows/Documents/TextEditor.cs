@@ -469,6 +469,7 @@ namespace System.Windows.Documents
                 return;
             }
 
+#if !WINDOWS_APP_SDK
             // Get the current culture infomation to mark the input culture information
             XmlLanguage language = (XmlLanguage)((ITextPointer)range.Start).GetValue(FrameworkElement.LanguageProperty);
 
@@ -480,6 +481,12 @@ namespace System.Windows.Documents
             {
                 range.ApplyPropertyValue(FrameworkElement.LanguageProperty, XmlLanguage.GetLanguage(inputCultureInfo.IetfLanguageTag));
             }
+#endif
+            // Language is FrameworkElement-owned, and a text pointer resolves to a document
+            // element (a plain DependencyObject under the shim), which WinAppSDK refuses to
+            // read it from — see MS.Internal.WinUIPropertyBridge. Skipping only drops
+            // the xml:lang annotation on inserted text; the text itself is unaffected. The
+            // flow-direction handling below still runs, exactly as on Uno.
 
             // Get the input language's flow direction
             FlowDirection inputFlowDirection;

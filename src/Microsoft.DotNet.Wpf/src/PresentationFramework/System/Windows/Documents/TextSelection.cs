@@ -1642,7 +1642,14 @@ namespace System.Windows.Documents
             }
 
             // Get the default background from the system color or UiScope's background
+#if WINDOWS_APP_SDK
+            // Panel.BackgroundProperty is Panel-owned and the UiScope is a Control, which
+            // WinAppSDK refuses — and this runs on a dispatcher callback, so the throw would
+            // kill the process instead of failing a test. See MS.Internal.WinUIPropertyBridge.
+            backgroundPropertyValue = MS.Internal.WinUIPropertyBridge.GetUiScopeBackground(textEditor.UiScope);
+#else
             backgroundPropertyValue = textEditor.UiScope.GetValue(System.Windows.Controls.Panel.BackgroundProperty);
+#endif
             if (backgroundPropertyValue != null && backgroundPropertyValue != DependencyProperty.UnsetValue &&
                 backgroundPropertyValue is SolidColorBrush)
             {

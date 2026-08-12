@@ -803,6 +803,13 @@ namespace System.Windows.Documents
             {
                 DependencyProperty property = inheritableProperties[i];
 
+#if WINDOWS_APP_SDK
+                // A text pointer resolves to a document element, which WinAppSDK will not let
+                // us read FrameworkElement/UIElement-owned properties from. Those describe the
+                // host, not the text, so they are not part of the serialized document anyway.
+                // See MS.Internal.WinUIPropertyBridge.
+                if (!MS.Internal.WinUIPropertyBridge.IsTransferableToDocument(property)) continue;
+#endif
                 object innerValue = context.GetValue(property);
                 if (innerValue == null)
                 {

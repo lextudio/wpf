@@ -711,6 +711,9 @@ namespace System.Windows.Controls
         {
             Invariant.Assert(_implicitDocument, "We only supposed to do this for implicit documents");
 
+#if WINDOWS_APP_SDK
+            if (!MS.Internal.WinUIPropertyBridge.IsTransferableToDocument(property)) return;
+#endif
             object defaultValue = _document.GetValue(property);
             if (!TextSchema.ValuesAreEqual(inheritedValue, defaultValue))
             {
@@ -753,6 +756,9 @@ namespace System.Windows.Controls
         /// </remarks>
         private void TransferBehavioralProperty(DependencyProperty property, object inheritedValue)
         {
+#if WINDOWS_APP_SDK
+            if (!MS.Internal.WinUIPropertyBridge.IsTransferableToDocument(property)) return;
+#endif
             // Set the value unconditionally as explicit local value
             _document.SetValue(property, inheritedValue);
         }
