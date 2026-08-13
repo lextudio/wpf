@@ -2858,8 +2858,8 @@ namespace System.Windows.Controls
             // re-evalutate the BeginEdit command's CanExecute.
             CommandManager.InvalidateRequerySuggested();
 
-            d.CoerceValue(CanUserAddRowsProperty);
-            d.CoerceValue(CanUserDeleteRowsProperty);
+            ((DataGrid)d).CoerceValue(CanUserAddRowsProperty);
+            ((DataGrid)d).CoerceValue(CanUserDeleteRowsProperty);
 
             // Affects the IsReadOnly property on cells
             OnNotifyColumnAndCellPropertyChanged(d, e);
@@ -5458,8 +5458,8 @@ namespace System.Windows.Controls
 
         private static void OnIsEnabledChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            d.CoerceValue(CanUserAddRowsProperty);
-            d.CoerceValue(CanUserDeleteRowsProperty);
+            ((DataGrid)d).CoerceValue(CanUserAddRowsProperty);
+            ((DataGrid)d).CoerceValue(CanUserDeleteRowsProperty);
 
             // Many commands use IsEnabled to determine if they are enabled or not
             CommandManager.InvalidateRequerySuggested();
