@@ -44,7 +44,15 @@ namespace System.Windows.Documents
             // Initialize TextElement inheritable properties
             DependencyProperty[] textElementPropertyList = new DependencyProperty[]
                 {
+#if WINDOWS_APP_SDK
+                    // FrameworkElement.LanguageProperty is WinUI-owned (FrameworkElement is
+                    // globally aliased to Microsoft.UI.Xaml.FrameworkElement), so reading it
+                    // from a document object fails there. Substitute the document-side attached
+                    // property, exactly as FlowDirection does just below.
+                    TextElement.LanguageProperty,
+#else
                     FrameworkElement.LanguageProperty,
+#endif
 #if HAS_UNO
                     Inline.FlowDirectionProperty,
 #else

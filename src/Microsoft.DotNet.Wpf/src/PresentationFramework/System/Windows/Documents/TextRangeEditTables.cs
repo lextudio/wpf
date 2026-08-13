@@ -2313,6 +2313,11 @@ namespace System.Windows.Documents
                     for (int i = 0; i < inheritableProperties.Length; i++)
                     {
                         DependencyProperty property = inheritableProperties[i];
+#if WINDOWS_APP_SDK
+                        // FrameworkElement/UIElement-owned properties cannot be read from a
+                        // Paragraph here. See MS.Internal.WinUIPropertyBridge.
+                        if (!MS.Internal.WinUIPropertyBridge.IsTransferableToDocument(property)) continue;
+#endif
                         object value = sourceParagraph.ReadLocalValue(property);
                         if (value != DependencyProperty.UnsetValue)
                         {

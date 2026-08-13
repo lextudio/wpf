@@ -94,6 +94,13 @@ namespace System.Windows.Documents
             {
                 DependencyProperty property = inheritableProperties[i];
 
+#if WINDOWS_APP_SDK
+                // Language/AllowDrop are FrameworkElement/UIElement-owned; reading them from an
+                // Inline fails under WinAppSDK. They describe the host, not character
+                // formatting, so they cannot distinguish two inlines anyway.
+                // See MS.Internal.WinUIPropertyBridge.
+                if (!MS.Internal.WinUIPropertyBridge.IsTransferableToDocument(property)) continue;
+#endif
                 if (TextSchema.IsStructuralCharacterProperty(property))
                 {
                     if (firstInline.ReadLocalValue(property) != DependencyProperty.UnsetValue ||
@@ -347,6 +354,11 @@ namespace System.Windows.Documents
                     {
                         DependencyProperty property = inheritableProperties[i];
 
+#if WINDOWS_APP_SDK
+                        // FrameworkElement/UIElement-owned properties cannot be read from a
+                        // text element here. See MS.Internal.WinUIPropertyBridge.
+                        if (!MS.Internal.WinUIPropertyBridge.IsTransferableToDocument(property)) continue;
+#endif
                         object inlineValue = inline.GetValue(property);
                         object parentSpanValue = parentSpan.GetValue(property);
 

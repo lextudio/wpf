@@ -753,6 +753,12 @@ namespace System.Windows.Documents
             for (int i = 0; i < inheritableProperties.Length; i++)
             {
                 DependencyProperty property = inheritableProperties[i];
+#if WINDOWS_APP_SDK
+                // FrameworkElement/UIElement-owned properties cannot be read from a
+                // FlowDocument, and describe the host rather than the document's content.
+                // See MS.Internal.WinUIPropertyBridge.
+                if (!MS.Internal.WinUIPropertyBridge.IsTransferableToDocument(property)) continue;
+#endif
                 object value = context.ReadLocalValue(property);
 
                 if (value != DependencyProperty.UnsetValue)
@@ -763,7 +769,11 @@ namespace System.Windows.Documents
                         stringValue = FilterNaNStringValueForDoublePropertyType(stringValue, property.PropertyType);
 
                         string propertyName;
+#if WINDOWS_APP_SDK
+                        if (property == TextElement.LanguageProperty)
+#else
                         if (property == FrameworkContentElement.LanguageProperty)
+#endif
                         {
                             // Special case for CultureInfo property that must be represented in xaml as xml:lang attribute
                             propertyName = "xml:lang";
@@ -835,7 +845,11 @@ namespace System.Windows.Documents
                         stringValue = FilterNaNStringValueForDoublePropertyType(stringValue, property.PropertyType);
 
                         string propertyName;
+#if WINDOWS_APP_SDK
+                        if (property == TextElement.LanguageProperty)
+#else
                         if (property == FrameworkContentElement.LanguageProperty)
+#endif
                         {
                             // Special case for CultureInfo property that must be represented in xaml as xml:lang attribute
                             propertyName = "xml:lang";
@@ -1161,6 +1175,13 @@ namespace System.Windows.Documents
             for (int i = 0; i < elementProperties.Length; i++)
             {
                 DependencyProperty property = elementProperties[i];
+#if WINDOWS_APP_SDK
+                // Atomic elements such as TableColumn are plain DependencyObjects under the
+                // shim, and reading a FrameworkElement/UIElement-owned property from one does
+                // not throw here — it access-violates (0xC0000005) and takes the process down.
+                // See MS.Internal.WinUIPropertyBridge.
+                if (!MS.Internal.WinUIPropertyBridge.IsTransferableToDocument(property)) continue;
+#endif
                 object propertyValue = element.ReadLocalValue(property);
                 if (propertyValue != null && propertyValue != DependencyProperty.UnsetValue)
                 {

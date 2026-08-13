@@ -1498,15 +1498,29 @@ namespace System.Windows.Documents
                 {
                     for (int i = 0; i < inheritableProperties.Length; i++)
                     {
-                        if (_springloadFormatting.ReadLocalValue(inheritableProperties[i]) == DependencyProperty.UnsetValue &&
-                            inheritableProperties[i] != FrameworkElement.LanguageProperty &&
-                            inheritableProperties[i] !=
-#if HAS_UNO
-                            Inline.FlowDirectionProperty &&
+                        // Language and FlowDirection are excluded below in WPF too; they are
+                        // only tested after ReadLocalValue there. The order matters under the
+                        // shim: Language is FrameworkElement-owned and _springloadFormatting is
+                        // a plain DependencyObject, so reading it throws instead of returning
+                        // UnsetValue. Screening first is equivalent for every other property.
+                        DependencyProperty inheritableProperty = inheritableProperties[i];
+#if WINDOWS_APP_SDK
+                        // TextSchema substitutes the document-side attached property here.
+                        bool notLanguage = inheritableProperty != TextElement.LanguageProperty;
 #else
-                            FrameworkElement.FlowDirectionProperty &&
+                        bool notLanguage = inheritableProperty != FrameworkElement.LanguageProperty;
 #endif
-                            System.Windows.DependencyPropertyHelper.GetValueSource(element, inheritableProperties[i]).BaseValueSource != BaseValueSource.Inherited)
+                        bool notFlowDirection = inheritableProperty !=
+#if HAS_UNO
+                            Inline.FlowDirectionProperty;
+#else
+                            FrameworkElement.FlowDirectionProperty;
+#endif
+                        bool notInherited = notLanguage && notFlowDirection
+                            && _springloadFormatting.ReadLocalValue(inheritableProperty) == DependencyProperty.UnsetValue
+                            && System.Windows.DependencyPropertyHelper.GetValueSource(element, inheritableProperty).BaseValueSource != BaseValueSource.Inherited;
+
+                        if (notInherited)
                         {
                             object value = parent.GetValue(inheritableProperties[i]);
                             _springloadFormatting.SetValue(inheritableProperties[i], value);
