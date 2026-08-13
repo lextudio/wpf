@@ -34,7 +34,10 @@ namespace System.Windows.Controls
             column.CoerceValue(CanUserSortProperty);
         }
 
-        private static object OnCoerceTemplateColumnCanUserSort(DependencyObject d, object baseValue)
+        // Session 130 slice 8: `internal` so the DataGridColumn shim's
+        // CoerceValue whitelist can invoke it for template columns (its
+        // OverrideMetadata registration is a no-op under the shim).
+        internal static object OnCoerceTemplateColumnCanUserSort(DependencyObject d, object baseValue)
         {
             DataGridTemplateColumn templateColumn = (DataGridTemplateColumn)d;
             if (string.IsNullOrEmpty(templateColumn.SortMemberPath))

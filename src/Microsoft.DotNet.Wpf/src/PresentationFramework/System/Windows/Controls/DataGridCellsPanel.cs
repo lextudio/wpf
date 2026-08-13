@@ -1298,11 +1298,19 @@ namespace System.Windows.Controls
             parentDataGrid?.NonFrozenColumnsViewportHorizontalOffset = arrangeState.DataGridHorizontalScrollStartX;
 
             // Remove the clip on previous clipped child
-            arrangeState.OldClippedChild?.CoerceValue(ClipProperty);
+            // Session 130 slice 9: receiver is statically typed UIElement, which binds to
+            // the base no-op CoerceValue. Cast so the DataGridCell override runs.
+            if (arrangeState.OldClippedChild is DataGridCell oldClippedCell)
+            {
+                oldClippedCell.CoerceValue(ClipProperty);
+            }
 
             // Add the clip on new child to be clipped for the sake of frozen columns.
             _clippedChildForFrozenBehaviour = arrangeState.NewClippedChild;
-            _clippedChildForFrozenBehaviour?.CoerceValue(ClipProperty);
+            if (_clippedChildForFrozenBehaviour is DataGridCell newClippedCell)
+            {
+                newClippedCell.CoerceValue(ClipProperty);
+            }
         }
 
         private void SetDataGridCellPanelWidth(IList children, double newWidth)

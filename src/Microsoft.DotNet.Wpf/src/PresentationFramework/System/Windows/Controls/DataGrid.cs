@@ -927,7 +927,10 @@ namespace System.Windows.Controls
 
         private static void OnRowStyleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            d.CoerceValue(ItemContainerStyleProperty);
+            // Session 130 slice 6: `d` is statically typed DependencyObject here, which
+            // binds to the base no-op CoerceValue. Cast so the DataGrid override runs
+            // (same fix as OnIsReadOnlyChanged/OnIsEnabledChanged, session 130 slice 3).
+            ((DataGrid)d).CoerceValue(ItemContainerStyleProperty);
 #if HAS_UNO
             ((DataGrid)d).NotifyPropertyChanged(d, e, DataGridNotificationTarget.Rows);
 #endif
@@ -1042,7 +1045,8 @@ namespace System.Windows.Controls
 
         private static void OnRowStyleSelectorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            d.CoerceValue(ItemContainerStyleSelectorProperty);
+            // Session 130 slice 6: same DependencyObject-binding fix as OnRowStyleChanged.
+            ((DataGrid)d).CoerceValue(ItemContainerStyleSelectorProperty);
 #if HAS_UNO
             ((DataGrid)d).NotifyPropertyChanged(d, e, DataGridNotificationTarget.Rows);
 #endif
