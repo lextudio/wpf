@@ -12,6 +12,12 @@ using System.Windows.Controls;
 
 --*/
 
+#if HAS_UNO
+using Matrix = System.Windows.Media.Matrix;
+using Image = System.Windows.Controls.Image;
+using Path = System.Windows.Shapes.Path;
+#endif
+
 namespace System.Windows.Documents
 {
     internal abstract class FixedSOMElement : FixedSOMSemanticBox

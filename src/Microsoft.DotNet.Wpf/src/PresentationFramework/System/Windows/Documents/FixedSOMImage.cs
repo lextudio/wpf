@@ -13,6 +13,11 @@ using System.Windows.Shapes;
         a Path with an ImageBrush              
 --*/
 
+#if HAS_UNO
+using Image = System.Windows.Controls.Image;
+using Path = System.Windows.Shapes.Path;
+#endif
+
 namespace System.Windows.Documents
 {
     internal sealed class FixedSOMImage : FixedSOMElement
@@ -56,7 +61,11 @@ namespace System.Windows.Documents
                 BitmapFrame imageSource = image.Source as BitmapFrame;
                 imageUri = new Uri(imageSource.ToString(), UriKind.RelativeOrAbsolute);
             }
+#if HAS_UNO
+            Rect sourceRect = System.Windows.Media.RectExtensions.FromSize(image.RenderSize);
+#else
             Rect sourceRect = new Rect(image.RenderSize);
+#endif
 
             GeneralTransform transform = image.TransformToAncestor(page);            
             return new FixedSOMImage(sourceRect, transform, imageUri, fixedNode, image);
@@ -83,7 +92,7 @@ namespace System.Windows.Documents
             return new FixedSOMImage(sourceRect, trans, imageUri, fixedNode, path);
         }
 
-#if DEBUG
+#if DEBUG && !HAS_UNO   // HAS_UNO: DrawDebugVisual rendering needs DrawingContext/FormattedText/GlyphRun, none of which WinUI exposes.
        
         public override void Render(DrawingContext dc, string label, DrawDebugVisual debugVisual)
         {

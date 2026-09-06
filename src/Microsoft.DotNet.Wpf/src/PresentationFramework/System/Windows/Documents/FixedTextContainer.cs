@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using MS.Internal.Documents;
@@ -6,6 +6,11 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Collections;
+
+#if HAS_UNO
+using Image = System.Windows.Controls.Image;
+using Path = System.Windows.Shapes.Path;
+#endif
 
 namespace System.Windows.Documents
 {

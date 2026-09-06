@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 #region Using directives
@@ -15,6 +15,10 @@ using MS.Internal;
 
 #endregion
 
+
+#if HAS_UNO
+using Package = System.IO.Packaging.Package;
+#endif
 
 namespace System.Windows.Documents
 {

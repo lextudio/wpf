@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using MS.Internal;                  // DoubleUtil
@@ -14,7 +14,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;        // DesignerSerializationVisibility
 using System.Globalization;
-using MS.Internal.Annotations.Component;
+#if !HAS_UNO
+using MS.Internal.Annotations.Component;    // annotation adorner layer (not ported)
+#endif
 using System.Windows.Navigation;
 using System.Windows.Controls;
 using MS.Internal.IO.Packaging;
@@ -26,6 +28,10 @@ using PackUriHelper = System.IO.Packaging.PackUriHelper;
 //      Implements the FixedDocument element
 //
 // FixedPage changes.mht
+
+#if HAS_UNO
+using Image = System.Windows.Controls.Image;
+#endif
 
 namespace System.Windows.Documents
 {
@@ -1345,7 +1351,11 @@ namespace System.Windows.Documents
 
         #region Ctors
         internal FixedDocumentPage(FixedDocument panel, FixedPage page, Size fixedSize, int index) :
+#if HAS_UNO
+            base(page, fixedSize, System.Windows.Media.RectExtensions.FromSize(fixedSize), System.Windows.Media.RectExtensions.FromSize(fixedSize))
+#else
             base(page, fixedSize, new Rect(fixedSize), new Rect(fixedSize))
+#endif
         {
             Debug.Assert(panel != null && page != null);
             _panel = panel;
@@ -1409,7 +1419,11 @@ namespace System.Windows.Documents
                     if ((e = ((object)base.Visual) as UIElement)!=null)
                     {
                         e.Measure(base.Size);
+#if HAS_UNO
+                        e.Arrange(System.Windows.Media.RectExtensions.FromSize(base.Size));
+#else
                         e.Arrange(new Rect(base.Size));
+#endif
                     }
                 }
                 return base.Visual;

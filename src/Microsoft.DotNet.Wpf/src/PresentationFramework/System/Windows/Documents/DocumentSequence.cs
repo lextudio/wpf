@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using MS.Internal.Documents;
@@ -1125,7 +1125,11 @@ namespace System.Windows.Documents
                     if ((e = ((object)base.Visual) as UIElement) != null)
                     {
                         e.Measure(base.Size);
+#if HAS_UNO
+                        e.Arrange(System.Windows.Media.RectExtensions.FromSize(base.Size));
+#else
                         e.Arrange(new Rect(base.Size));
+#endif
                     }
                 }
                 return base.Visual;

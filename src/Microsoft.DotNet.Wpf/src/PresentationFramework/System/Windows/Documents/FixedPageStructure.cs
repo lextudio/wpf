@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Windows.Media;
@@ -12,6 +12,11 @@ using CultureInfo = System.Globalization.CultureInfo;
 //      FixedPageStructure represents deduced information (such as boundary,
 //      geometry,layout, semantic, etc.) after a fixed page is analyzed.
 //
+
+#if HAS_UNO
+using Image = System.Windows.Controls.Image;
+using Path = System.Windows.Shapes.Path;
+#endif
 
 namespace System.Windows.Documents
 {
@@ -52,7 +57,7 @@ namespace System.Windows.Documents
 
         #region Public Methods
 
-#if DEBUG
+#if DEBUG && !HAS_UNO   // HAS_UNO: DrawDebugVisual rendering needs DrawingContext/FormattedText/GlyphRun, none of which WinUI exposes.
         /// <summary>
         /// Create a string representation of this object
         /// </summary>
@@ -91,7 +96,7 @@ namespace System.Windows.Documents
         internal void SetupLineResults(FixedLineResult[] lineResults)
         {
             _lineResults = lineResults;
-#if DEBUG
+#if DEBUG && !HAS_UNO   // HAS_UNO: DrawDebugVisual rendering needs DrawingContext/FormattedText/GlyphRun, none of which WinUI exposes.
             DocumentsTrace.FixedTextOM.Builder.Trace("----LineResults Begin Dump-----\r\n");
             foreach(FixedLineResult lineResult in _lineResults)
             {
@@ -206,7 +211,7 @@ namespace System.Windows.Documents
         }
 
 
-#if DEBUG
+#if DEBUG && !HAS_UNO   // HAS_UNO: DrawDebugVisual rendering needs DrawingContext/FormattedText/GlyphRun, none of which WinUI exposes.
         private void DrawRectOutline(DrawingContext dc, Pen pen, Rect rect)
         {
             Debug.Assert(!rect.IsEmpty);
@@ -788,7 +793,7 @@ namespace System.Windows.Documents
             }
         }
 
-#if DEBUG
+#if DEBUG && !HAS_UNO   // HAS_UNO: DrawDebugVisual rendering needs DrawingContext/FormattedText/GlyphRun, none of which WinUI exposes.
         internal FixedTextBuilder FixedTextBuilder
         {
             get
@@ -883,7 +888,7 @@ namespace System.Windows.Documents
 
         //Determines whether a point is close enough to a line when determining snap to line
 
-#if DEBUG
+#if DEBUG && !HAS_UNO   // HAS_UNO: DrawDebugVisual rendering needs DrawingContext/FormattedText/GlyphRun, none of which WinUI exposes.
         private FixedTextBuilder _fixedTextBuilder;
         private FlowNode[] _flowNodes; //Flow nodes for this page
         private List<FixedNode> _fixedNodes;

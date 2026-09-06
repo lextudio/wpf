@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Windows.Shapes;
@@ -11,9 +11,20 @@ using System.Windows.Media;
         for each page on the document
 --*/
 
+#if HAS_UNO
+using Matrix = System.Windows.Media.Matrix;
+using Path = System.Windows.Shapes.Path;
+using Image = System.Windows.Controls.Image;
+#endif
+
 namespace System.Windows.Documents
 {
     #region GeometryAnalyzer
+
+// HAS_UNO: CapacityStreamGeometryContext / StreamGeometry are PresentationCore visual-layer
+// types with no WinUI equivalent. The PathGeometry fallback in _ProcessPath covers the same
+// line detection, so the StreamGeometry fast path is compiled out.
+#if !HAS_UNO
 
     /// <summary>
     /// Walk a StreamGeometry to find line shapes for table recognition, without expensive conversion to PathGeometry
@@ -205,6 +216,8 @@ namespace System.Windows.Documents
         }
     }
 
+#endif // !HAS_UNO
+
     #endregion
 
     internal sealed class FixedSOMPageConstructor
@@ -304,6 +317,7 @@ namespace System.Windows.Documents
                 }
             }
 
+#if !HAS_UNO
             StreamGeometry sgeo = geom as StreamGeometry;
 
             // Avoiding convert to PathGeometry if it's StreamGeometry, which can be walked
@@ -318,6 +332,7 @@ namespace System.Windows.Documents
                 _geometryWalker.FindLines(sgeo, stroke, fill, transform);
             }
             else
+#endif // !HAS_UNO
             {
                 PathGeometry pathGeom = PathGeometry.CreateFromGeometry(geom);
 
@@ -1177,7 +1192,9 @@ namespace System.Windows.Documents
         private FixedSOMPage _fixedSOMPage;
         private List<FixedNode> _fixedNodes;
         private FixedSOMLineCollection _lines;
+#if !HAS_UNO
         private GeometryWalker _geometryWalker;
+#endif // !HAS_UNO
         #endregion Private Fields
     }
 }

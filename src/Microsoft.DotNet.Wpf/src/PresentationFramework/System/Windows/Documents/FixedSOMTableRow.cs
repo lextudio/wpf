@@ -31,7 +31,7 @@ namespace System.Windows.Documents
         //---------------------------------------------------------------------
 
         #region Public Methods
-#if DEBUG
+#if DEBUG && !HAS_UNO   // HAS_UNO: DrawDebugVisual rendering needs DrawingContext/FormattedText/GlyphRun, none of which WinUI exposes.
         public override void Render(DrawingContext dc, string label, DrawDebugVisual debugVisual)
         {
             /*

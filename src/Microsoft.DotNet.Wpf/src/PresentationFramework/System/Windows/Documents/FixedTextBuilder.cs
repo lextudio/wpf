@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using MS.Internal.Documents;
@@ -20,6 +20,11 @@ using MS.Utility;
 //      FixedTextBuilder contains heuristics to map fixed document elements
 //      into stream of flow text
 //
+
+#if HAS_UNO
+using Matrix = System.Windows.Media.Matrix;
+using Image = System.Windows.Controls.Image;
+#endif
 
 namespace System.Windows.Documents
 {
@@ -1284,7 +1289,11 @@ namespace System.Windows.Documents
                             Rect designRect = run.ComputeAlignmentBox();
                             designRect.Offset(run.BaselineOrigin.X, run.BaselineOrigin.Y);
 
+#if HAS_UNO
+                            g = new RectangleGeometry { Rect = designRect };
+#else
                             g = new RectangleGeometry(designRect);
+#endif
                         }
                         else if (e is Path)
                         {
@@ -1294,7 +1303,11 @@ namespace System.Windows.Documents
                         {
                             Debug.Assert(e is Image);
                             Image im = (Image)e;
+#if HAS_UNO
+                            g = new RectangleGeometry { Rect = new Rect(0, 0, im.Width, im.Height) };
+#else
                             g = new RectangleGeometry(new Rect(0, 0, im.Width, im.Height));
+#endif
                         }
                         logicalHyperlink = _GetHyperlinkFromGeometry(g, t);
                         if (logicalHyperlink != null)

@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 
@@ -7,6 +7,8 @@ using System.Globalization;
 using System.IO;
 #if PRESENTATION_CORE
 using MS.Internal.PresentationCore;  // for BindUriHelper.UriToString
+#elif HAS_UNO
+// HAS_UNO: LeXtudio.Windows merges the WPF assemblies into one; SR lives in the root namespace.
 #else
 #error Class is being used from an unknown assembly.
 #endif

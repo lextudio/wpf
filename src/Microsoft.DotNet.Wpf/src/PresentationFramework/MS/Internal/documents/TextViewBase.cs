@@ -444,7 +444,11 @@ namespace MS.Internal.Documents
             }
 
             // Both transforms are non-identity. Return matrix transform that is the product of firstTransform * secondTransform
+#if HAS_UNO
+            Transform transform = new MatrixTransform { Matrix = (firstTransform.Value * secondTransform.Value).ToWinUI() };
+#else
             Transform transform = new MatrixTransform(firstTransform.Value * secondTransform.Value);
+#endif
             return transform;
         }
 

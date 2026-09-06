@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using MS.Internal;
@@ -409,6 +409,8 @@ namespace System.Windows.Documents
 
             return boolRet;
         }
+// HAS_UNO: WinUI has no LogicalChildren.
+#if !HAS_UNO
         /// <summary>
         /// Puts FixedPage in the logical tree if it is already loaded.
         /// </summary>
@@ -439,6 +441,7 @@ namespace System.Windows.Documents
                 return children.GetEnumerator();
             }
         }
+#endif // !HAS_UNO
 
         #endregion Internal Properties
 
@@ -461,7 +464,11 @@ namespace System.Windows.Documents
         #region Private Methods
         private void  _Init()
         {
+#if HAS_UNO
+            this.InheritanceBehavior = InheritanceBehavior.SkipToAppNow;   // extension member
+#else
             InheritanceBehavior = InheritanceBehavior.SkipToAppNow;
+#endif
             _pendingStreams = new HybridDictionary();
         }
 
@@ -593,10 +600,14 @@ namespace System.Windows.Documents
                 XpsValidatingLoader loader = new XpsValidatingLoader();
                 o = loader.Load(pageStream, baseUri, pc, mimeType);
             }
+#if !HAS_UNO
+            // HAS_UNO: BAML is the WPF build task's compiled-XAML format; there is no
+            // reader for it here, so a BAML part falls through to the unsupported-type throw.
             else if (MS.Internal.MimeTypeMapper.BamlMime.AreTypeAndSubTypeEqual(mimeType))
             {
                 o = XamlReader.LoadBaml(pageStream, pc, null, true);
             }
+#endif
             else
             {
                 throw new ApplicationException(SR.PageContentUnsupportedMimeType);

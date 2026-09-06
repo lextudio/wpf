@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 
@@ -155,7 +155,12 @@ namespace System.Windows.Documents
                 string textString = GetText();
                 object bmp = null;
 
+#if !HAS_UNO
+                // HAS_UNO: the bitmap snapshot clones the retained-mode visual tree
+                // (ContainerVisual/DrawingVisual/RenderOpen), which WinUI does not expose.
+                // Text still reaches the clipboard below.
                 bmp = SystemDrawingHelper.GetBitmapFromBitmapSource(GetImage());
+#endif // !HAS_UNO
 
                 dataObject = new DataObject();
                 // Order of data is irrelevant, the pasting application will determine format
@@ -178,6 +183,7 @@ namespace System.Windows.Documents
             }
         }
 
+#if !HAS_UNO
         //gets snapshot image
         private BitmapSource GetImage()
         {
@@ -243,6 +249,7 @@ namespace System.Windows.Documents
                 CloneVisualTree(visual, child);
             }
         }
+#endif // !HAS_UNO
         //gets text within selected area
         private string GetText()
         {

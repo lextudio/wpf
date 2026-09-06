@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Collections;
@@ -12,6 +12,9 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using MS.Internal.Documents;
 using MS.Internal.Utility;
+#if HAS_UNO
+using Matrix = System.Windows.Media.Matrix;
+#endif
 
 using BuildInfo = MS.Internal.PresentationFramework.BuildInfo;
 
@@ -20,6 +23,10 @@ using BuildInfo = MS.Internal.PresentationFramework.BuildInfo;
 //      Implements the FixedPage element
 // Spec FixedPanelPage.mht
 //
+
+#if HAS_UNO
+using Path = System.Windows.Shapes.Path;
+#endif
 
 namespace System.Windows.Documents
 {
@@ -36,7 +43,14 @@ namespace System.Windows.Documents
     /// to automatically set page breaks at the beginning and end of its content.
     /// </summary>
     [ContentProperty("Children")]
+#if HAS_UNO
+    // HAS_UNO: WinUI's FrameworkElement cannot host children, and UIElementCollection
+    // cannot be constructed standalone. Derive from the WPF Panel shim (a WinUI Panel)
+    // so Children/visual-children come from the real WinUI panel.
+    public sealed partial class FixedPage : System.Windows.Controls.Panel, IAddChildInternal, IFixedNavigate, IUriContext
+#else
     public sealed class FixedPage : FrameworkElement, IAddChildInternal, IFixedNavigate, IUriContext
+#endif
     {
         //--------------------------------------------------------------------
         //
@@ -85,6 +99,8 @@ namespace System.Windows.Documents
             return new System.Windows.Automation.Peers.FixedPageAutomationPeer(this);
         }
 
+// HAS_UNO: UIElement.OnPreviewMouseWheel has no WinUI equivalent (debug-visual only).
+#if !HAS_UNO
         /// <summary>
         /// Responds to mouse wheel event, used to update debug visuals.
         /// MouseWheelEvent handler, initializes the context menu.
@@ -136,7 +152,11 @@ namespace System.Windows.Documents
             }
 #endif
         }
+#endif // !HAS_UNO
 
+// HAS_UNO: WinUI has no OnRender/DrawingContext; page background is painted by the Panel template.
+#if !HAS_UNO
+// HAS_UNO: DebugVisualAdorner draws through DrawingContext.
         /// <summary>
         /// Override from UIElement
         /// </summary>
@@ -165,6 +185,7 @@ namespace System.Windows.Documents
 
 #endif
         }
+#endif // !HAS_UNO
 
         ///<summary>
         /// This method is called to Add the object as a child of the Panel.  This method is used primarily
@@ -351,6 +372,8 @@ namespace System.Windows.Documents
             set { SetValue(BaseUriHelper.BaseUriProperty, value); }
         }
 
+// HAS_UNO: WinUI has no LogicalChildren; Panel.Children is the tree.
+#if !HAS_UNO
         /// <summary>
         /// Returns enumerator to logical children.
         /// </summary>
@@ -361,6 +384,7 @@ namespace System.Windows.Documents
                 return this.Children.GetEnumerator();
             }
         }
+#endif // !HAS_UNO
 
 
         #endregion IUriContext
@@ -373,6 +397,8 @@ namespace System.Windows.Documents
 
         #region Public Properties
 
+// HAS_UNO: Panel.Children (WinUI) supplies the collection under HAS_UNO.
+#if !HAS_UNO
         /// <summary>
         /// Returns a UIElementCollection of children for user to add/remove children manually
         /// Returns null if Panel is data-bound (no manual control of children is possible,
@@ -395,6 +421,7 @@ namespace System.Windows.Documents
                 return _uiElementCollection;
             }
         }
+#endif // !HAS_UNO
 
         /// <summary>
         ///
@@ -554,6 +581,8 @@ namespace System.Windows.Documents
 
         #endregion
 
+// HAS_UNO: HighlightVisual/AdornerLayer wiring needs the WPF visual layer.
+#if !HAS_UNO
         protected internal override void OnVisualParentChanged(DependencyObject oldParent)
         {
             base.OnVisualParentChanged(oldParent);
@@ -593,6 +622,7 @@ namespace System.Windows.Documents
 #endif
             }
         }
+#endif // !HAS_UNO
 
         private static object CoerceFlowDirection(DependencyObject page, Object flowDirection)
         {
@@ -679,6 +709,8 @@ namespace System.Windows.Documents
         #region Protected Methods
 
 
+// HAS_UNO: Panel manages visual children under HAS_UNO.
+#if !HAS_UNO
         /// <summary>
         /// Gets the Visual children count.
         /// </summary>
@@ -696,7 +728,10 @@ namespace System.Windows.Documents
                 }
             }
         }
+#endif // !HAS_UNO
 
+// HAS_UNO: Panel manages visual children under HAS_UNO.
+#if !HAS_UNO
         /// <summary>
         /// Gets the Visual child at the specified index.
         /// </summary>
@@ -708,7 +743,9 @@ namespace System.Windows.Documents
             }
             return _uiElementCollection[index];
         }
+#endif // !HAS_UNO
 
+#if !HAS_UNO
         /// <summary>
         /// Creates a new UIElementCollection. Panel-derived class can create its own version of
         /// UIElementCollection -derived class to add cached information to every child or to
@@ -718,6 +755,7 @@ namespace System.Windows.Documents
         {
             return new UIElementCollection(this, logicalParent);
         }
+#endif // !HAS_UNO
 
 
         /// <summary>
@@ -1145,7 +1183,7 @@ namespace System.Windows.Documents
 #endif
     }
 
-#if DEBUG
+#if DEBUG && !HAS_UNO   // HAS_UNO: the debug-visual adorner draws through DrawingContext/FormattedText/GlyphRun, none of which WinUI exposes.
 
     internal sealed class DebugVisualAdorner: Adorner
     {
@@ -1270,7 +1308,11 @@ namespace System.Windows.Documents
                                         new Typeface("Arial"),
                                         10,
                                         Brushes.White,
+#if HAS_UNO
+                                        this.GetDpi().PixelsPerDip);
+#else
                                         GetDpi().PixelsPerDip);
+#endif
             Point labelLocation = new Point(boundingRect.Left-25, (boundingRect.Bottom + boundingRect.Top)/2 - 10);
             Geometry geom = ft.BuildHighlightGeometry(labelLocation);
             Pen backgroundPen = new Pen(Brushes.Black,1);

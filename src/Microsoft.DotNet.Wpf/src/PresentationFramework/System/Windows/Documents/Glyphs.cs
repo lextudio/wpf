@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 //
@@ -102,6 +102,8 @@ namespace System.Windows.Documents
             return finalSize;
         }
 
+// HAS_UNO: WinUI has no OnRender; glyph painting is done by the Uno text stack.
+#if !HAS_UNO
         /// <summary>
         /// Renders GlyphRun into a drawing context
         /// </summary>
@@ -121,6 +123,7 @@ namespace System.Windows.Documents
                 context.Pop();
             }
         }
+#endif // !HAS_UNO
 
         /// <summary>
         /// Measurement override for Glyphs
@@ -299,7 +302,11 @@ namespace System.Windows.Documents
                 if (String.IsNullOrEmpty(UnicodeString) && String.IsNullOrEmpty(Indices))
                     throw new ArgumentException(SR.GlyphsUnicodeStringAndIndicesCannotBothBeEmpty);
 
+#if HAS_UNO
+                glyphRunProperties = new LayoutDependentGlyphRunProperties(this.GetDpi().PixelsPerDip);
+#else
                 glyphRunProperties = new LayoutDependentGlyphRunProperties(GetDpi().PixelsPerDip);
+#endif
 
                 if (!uri.IsAbsoluteUri)
                 {

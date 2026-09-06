@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 //  
@@ -10,7 +10,13 @@
 
 using System.Collections.Specialized;
 using System.IO.Packaging;
+#if HAS_UNO
+// HAS_UNO: SR lives in the root namespace in LeXtudio.Windows; Package must be
+// disambiguated from Windows.ApplicationModel.Package pulled in by WinUI's usings.
+using Package = System.IO.Packaging.Package;
+#else
 using MS.Internal.PresentationCore;     // for ExceptionStringTable
+#endif
 
 namespace MS.Internal.IO.Packaging
 {

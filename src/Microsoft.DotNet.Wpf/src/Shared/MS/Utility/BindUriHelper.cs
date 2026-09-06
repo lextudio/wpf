@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Text;
@@ -23,6 +23,9 @@ namespace MS.Internal.Utility
 #elif REACHFRAMEWORK
 using MS.Internal.ReachFramework;
 
+namespace MS.Internal.Utility
+#elif HAS_UNO
+// HAS_UNO: LeXtudio.Windows merges the WPF assemblies into one; SR lives in the root namespace.
 namespace MS.Internal.Utility
 #else
 #error Class is being used from an unknown assembly.
@@ -61,7 +64,7 @@ namespace MS.Internal.Utility
                 MAX_URL_LENGTH).ToString();
         }        
         
-#if PRESENTATION_CORE || PRESENTATIONFRAMEWORK
+#if PRESENTATION_CORE || PRESENTATIONFRAMEWORK || HAS_UNO
         // Base Uri.
         internal static Uri BaseUri
         {
@@ -140,6 +143,6 @@ namespace MS.Internal.Utility
 
 
 
-#endif // PRESENTATION_CORE || PRESENTATIONFRAMEWORK
+#endif // PRESENTATION_CORE || PRESENTATIONFRAMEWORK || HAS_UNO
     }
 }

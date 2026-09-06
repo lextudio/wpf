@@ -101,7 +101,13 @@ namespace System.Windows.Documents
             {
                 if (_pageSize == Size.Empty && _visual != null)
                 {
+#if HAS_UNO
+                    // HAS_UNO: WinUI's VisualTreeHelper has no GetContentBounds; the
+                    // element's own desired size is the closest available measure.
+                    return _visual.DesiredSize;
+#else
                     return VisualTreeHelper.GetContentBounds(_visual).Size;
+#endif
                 }
                 return _pageSize;
             }
@@ -116,7 +122,7 @@ namespace System.Windows.Documents
             {
                 if (_bleedBox == Rect.Empty)
                 {
-                    return new Rect(this.Size);
+                    return new Rect(new Point(), this.Size);
                 }
                 return _bleedBox;
             }
@@ -131,7 +137,7 @@ namespace System.Windows.Documents
             {
                 if (_contentBox == Rect.Empty)
                 {
-                    return new Rect(this.Size);
+                    return new Rect(new Point(), this.Size);
                 }
                 return _contentBox;
             }

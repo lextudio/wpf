@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using MS.Internal;
@@ -65,7 +65,11 @@ namespace System.Windows.Documents
         public FixedDocument GetDocument(bool forceReload)
         {
             DocumentsTrace.FixedDocumentSequence.IDF.Trace($"DocumentReference.GetDocument ({(Source ?? new Uri("", UriKind.RelativeOrAbsolute))}, {forceReload})");
+#if HAS_UNO
+             this.VerifyAccess();   // extension member: needs an explicit receiver
+#else
              VerifyAccess();
+#endif
 
             FixedDocument idp = null;
             if (_doc != null)
@@ -107,7 +111,11 @@ namespace System.Windows.Documents
         /// <param name="doc"></param>
         public void SetDocument(FixedDocument doc)
         {
+#if HAS_UNO
+            this.VerifyAccess();   // extension member: needs an explicit receiver
+#else
             VerifyAccess();
+#endif
             _docIdentity = null;
             _doc = doc;
         }
@@ -282,10 +290,14 @@ namespace System.Windows.Documents
                     XpsValidatingLoader loader = new XpsValidatingLoader();
                     idp = loader.Load(docStream, ((IUriContext)this).BaseUri, pc, mimeType) as FixedDocument;
                 }
+#if !HAS_UNO
+                // HAS_UNO: BAML is the WPF build task's compiled-XAML format; there is no
+                // reader for it here, so a BAML part falls through to the unsupported-type throw.
                 else if (MS.Internal.MimeTypeMapper.BamlMime.AreTypeAndSubTypeEqual(mimeType))
                 {
                     idp = XamlReader.LoadBaml(docStream, pc, null, true) as FixedDocument;
                 }
+#endif
                 else
                 {
                     throw new ApplicationException(SR.DocumentReferenceUnsupportedMimeType);

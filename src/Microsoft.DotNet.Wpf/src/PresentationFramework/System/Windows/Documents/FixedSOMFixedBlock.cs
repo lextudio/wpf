@@ -9,6 +9,10 @@ using System.Text;
         This class reprsents a table row on the page. It would contain several table cells           
 --*/
 
+#if HAS_UNO
+using Matrix = System.Windows.Media.Matrix;
+#endif
+
 namespace System.Windows.Documents
 {
     internal sealed class FixedSOMFixedBlock : FixedSOMPageElement
@@ -140,7 +144,7 @@ namespace System.Windows.Documents
         //---------------------------------------------------------------------
 
         #region Public Methods
-#if DEBUG
+#if DEBUG && !HAS_UNO   // HAS_UNO: DrawDebugVisual rendering needs DrawingContext/FormattedText/GlyphRun, none of which WinUI exposes.
         public override void Render(DrawingContext dc, string label, DrawDebugVisual debugVisual)
         {
             Pen pen = new Pen(Brushes.Blue, 2);
@@ -209,7 +213,7 @@ namespace System.Windows.Documents
         }        
 
 
-#if DEBUG
+#if DEBUG && !HAS_UNO   // HAS_UNO: DrawDebugVisual rendering needs DrawingContext/FormattedText/GlyphRun, none of which WinUI exposes.
         public override string ToString()
         {
             StringBuilder builder = new StringBuilder();

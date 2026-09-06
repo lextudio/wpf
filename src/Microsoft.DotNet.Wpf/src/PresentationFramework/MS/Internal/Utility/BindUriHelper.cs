@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 
@@ -7,7 +7,7 @@
 //
 
 
-#if PRESENTATIONFRAMEWORK
+#if PRESENTATIONFRAMEWORK || HAS_UNO
 
 using System.Windows;
 using System.Windows.Navigation;
@@ -102,12 +102,17 @@ namespace MS.Internal.Utility
                 // and use its CurrentSource.
                 if (element != null)
                 {
+#if !HAS_UNO
+                    // HAS_UNO: INavigator is the Frame/NavigationWindow contract from the
+                    // app-model layer, which LeXtudio.Windows does not carry. The
+                    // NavigationService path below covers everything reachable here.
                     INavigator navigator = element as INavigator;
                     if (navigator != null)
                     {
                         currentSource = navigator.CurrentSource;
                     }
                     else
+#endif
                     {
                         NavigationService ns = null;
                         ns = element.GetValue(NavigationService.NavigationServiceProperty) as NavigationService;

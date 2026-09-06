@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Windows.Media;
@@ -58,7 +58,7 @@ namespace System.Windows.Documents
         //---------------------------------------------------------------------
         #region Public Methods
 
-#if DEBUG
+#if DEBUG && !HAS_UNO   // HAS_UNO: DrawDebugVisual rendering needs DrawingContext/FormattedText/GlyphRun, none of which WinUI exposes.
         //For visualization purposes
         public abstract void Render(DrawingContext dc, string label, DrawDebugVisual debugVisuals) ;
         public void RenderLabel(DrawingContext dc, string label)
