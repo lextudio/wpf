@@ -11,6 +11,10 @@ using System.Globalization;
         Partial elements are necessary when we decide that a single Glyphs element represents multiple semantic entitites such as table cells         
 --*/
 
+#if HAS_UNO
+using Matrix = System.Windows.Media.Matrix;
+#endif
+
 namespace System.Windows.Documents
 {
     //a set of characters that have the same font, face and size

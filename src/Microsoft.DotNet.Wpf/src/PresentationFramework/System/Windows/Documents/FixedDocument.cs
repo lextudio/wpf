@@ -31,6 +31,7 @@ using PackUriHelper = System.IO.Packaging.PackUriHelper;
 
 #if HAS_UNO
 using Image = System.Windows.Controls.Image;
+using Package = System.IO.Packaging.Package;
 #endif
 
 namespace System.Windows.Documents
@@ -153,7 +154,12 @@ namespace System.Windows.Documents
                 {
                     _partialPage = fp;
                     _partialPage.ChangeLogicalParent(this);
+#if HAS_UNO
+                    // HAS_UNO: FrameworkElement.Initialized has no WinUI counterpart; see FrameworkElementInitialized.
+                    System.Windows.FrameworkElementInitialized.Add(_partialPage, new EventHandler(OnPageLoaded));
+#else
                     _partialPage.Initialized += new EventHandler(OnPageLoaded);
+#endif
                 }
                 else
                 {
@@ -1011,7 +1017,12 @@ namespace System.Windows.Documents
             if (pc == _partialPage)
             {
                 DocumentsTrace.FixedFormat.FixedDocument.Trace($"Loaded Page {_pages.Count}");
+#if HAS_UNO
+                // HAS_UNO: FrameworkElement.Initialized has no WinUI counterpart; see FrameworkElementInitialized.
+                System.Windows.FrameworkElementInitialized.Remove(_partialPage, new EventHandler(OnPageLoaded));
+#else
                 _partialPage.Initialized -= new EventHandler(OnPageLoaded);
+#endif
                 _pages.Add(_partialPage);
                 _partialPage = null;
             }
@@ -1113,8 +1124,12 @@ namespace System.Windows.Documents
                     foreground = null;
                     background = null;
                 }
+#if !HAS_UNO
                 else
                 {
+                    // HAS_UNO: the annotation framework (AnnotationHighlightLayer,
+                    // HighlightComponent) is not part of this port, so an annotation
+                    // highlight simply does not contribute a fixed highlight.
                     //look for annotation highlight
                     AnnotationHighlightLayer.HighlightSegment highlightSegment = highlights.GetHighlightValue(highlightRangeStart,
                         LogicalDirection.Forward, typeof(HighlightComponent)) as AnnotationHighlightLayer.HighlightSegment;
@@ -1127,6 +1142,7 @@ namespace System.Windows.Documents
                         background = highlightSegment.Fill;
                     }
                 }
+#endif
 
                 //generate fixed highlight if a highlight was has been found
                 if (fixedHighlightType != FixedHighlightType.None)
@@ -1175,9 +1191,15 @@ namespace System.Windows.Documents
 
             foreach (int i in dirtyPages)
             {
+#if HAS_UNO
+                // HAS_UNO: HighlightVisual derives from DrawingVisual and is gated with the
+                // rest of the rendering layer; there is nothing to invalidate yet.
+                _ = SyncGetPage(i, false /*forceReload*/);
+#else
                 HighlightVisual hv = HighlightVisual.GetHighlightVisual(SyncGetPage(i, false /*forceReload*/));
 
                 hv?.InvalidateHighlights();
+#endif
             }
         }
 

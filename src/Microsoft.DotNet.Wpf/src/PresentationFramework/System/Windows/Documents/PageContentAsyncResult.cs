@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.IO;
@@ -152,7 +152,12 @@ namespace System.Windows.Documents
                         else
                         {
                             _pendingStream = responseStream; 
+#if HAS_UNO
+                            // HAS_UNO: FrameworkElement.Initialized has no WinUI counterpart; see FrameworkElementInitialized.
+                            System.Windows.FrameworkElementInitialized.Add(_result, new EventHandler(_OnPaserFinished));
+#else
                             _result.Initialized += new EventHandler(_OnPaserFinished);
+#endif
                         }
                         _getpageStatus = GetPageStatus.Finished;
                     }

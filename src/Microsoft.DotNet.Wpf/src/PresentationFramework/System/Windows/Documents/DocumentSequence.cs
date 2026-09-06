@@ -111,7 +111,12 @@ namespace System.Windows.Documents
                 if (_partialRef == null)
                 {
                     _partialRef = docRef;
+#if HAS_UNO
+                    // HAS_UNO: FrameworkElement.Initialized has no WinUI counterpart; see FrameworkElementInitialized.
+                    System.Windows.FrameworkElementInitialized.Add(_partialRef, new EventHandler(_OnDocumentReferenceInitialized));
+#else
                     _partialRef.Initialized += new EventHandler(_OnDocumentReferenceInitialized);
+#endif
                 }
                 else
                 {
@@ -701,7 +706,12 @@ namespace System.Windows.Documents
             if (docRef == _partialRef)
             {
                 DocumentsTrace.FixedDocumentSequence.Content.Trace($"Loaded DocumentReference {_references.Count}");
+#if HAS_UNO
+                // HAS_UNO: FrameworkElement.Initialized has no WinUI counterpart; see FrameworkElementInitialized.
+                System.Windows.FrameworkElementInitialized.Remove(_partialRef, new EventHandler(_OnDocumentReferenceInitialized));
+#else
                 _partialRef.Initialized -= new EventHandler(_OnDocumentReferenceInitialized);
+#endif
                 _partialRef = null;
                 _references.Add(docRef);
             }

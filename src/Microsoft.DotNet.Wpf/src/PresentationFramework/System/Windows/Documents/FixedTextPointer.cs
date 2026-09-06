@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using MS.Internal;
@@ -222,7 +222,13 @@ namespace System.Windows.Documents
 
             if (!e.IsTextElement)
             {
+#if HAS_UNO
+                // HAS_UNO: WinUI's DependencyObject is abstract, and the throwaway instance
+                // exists only to hand back an empty enumerator.
+                return new LocalValueEnumerator();
+#else
                 return (new DependencyObject()).GetLocalValueEnumerator();
+#endif
             }
 
             return e.GetLocalValueEnumerator();

@@ -853,7 +853,11 @@ namespace System.Windows.Documents
                     bool LTR1 = ((glyph1.BidiLevel & 1) == 0);
                     bool LTR2 = ((glyph2.BidiLevel & 1) == 0);
 
+#if HAS_UNO
+                    GeneralTransform transform = new System.Windows.Media.WinUIGeneralTransform(glyph2.TransformToVisual(glyph1));
+#else
                     GeneralTransform transform = glyph2.TransformToVisual(glyph1);
+#endif
                     Point prevPt = LTR1 ? box1.TopRight : box1.TopLeft;
                     Point currentPt = LTR2 ? box2.TopLeft : box2.TopRight;
                     transform?.TryTransform(currentPt, out currentPt);
@@ -936,7 +940,13 @@ namespace System.Windows.Documents
             int currentScopeId = _NewScopeId();
 
             // Create per run fixed nodes
+#if HAS_UNO
+            // HAS_UNO: WPF's IFrameworkInputElement is the "has a Name" contract; on WinUI
+            // that is FrameworkElement itself.
+            FrameworkElement namedNode;
+#else
             IFrameworkInputElement namedNode;
+#endif
 
             int childIndex = 0;
             IEnumerator elements = oneLevel.GetEnumerator();
@@ -944,7 +954,11 @@ namespace System.Windows.Documents
             {
                 if (!constructLines)
                 {
+#if HAS_UNO
+                    namedNode = elements.Current as FrameworkElement;
+#else
                     namedNode = elements.Current as IFrameworkInputElement;
+#endif
                     if (namedNode != null && namedNode.Name != null && namedNode.Name.Length != 0)
                     {
                         pageStructure.FixedDSBuilder.BuildNameHashTable(namedNode.Name,
@@ -1281,7 +1295,11 @@ namespace System.Windows.Documents
                     Uri relUri = FixedPage.GetNavigateUri(e);
                     if (relUri == null && _hyperlinks.Count > 0)
                     {
+#if HAS_UNO
+                        Transform t = e.TransformToAncestor(p).AffineTransform;
+#else
                         Transform t = e.TransformToAncestor(p) as Transform;
+#endif
                         Geometry g;
                         if (e is Glyphs)
                         {
@@ -1423,7 +1441,11 @@ namespace System.Windows.Documents
 
                     if (navUri != null && ((Path)child).Data != null)
                     {
+#if HAS_UNO
+                        Transform trans = child.TransformToAncestor(_fixedPage).AffineTransform;
+#else
                         Transform trans = child.TransformToAncestor(_fixedPage) as Transform;
+#endif
 
                         Geometry geom = ((Path)child).Data;
                         if (trans != null && !trans.Value.IsIdentity)

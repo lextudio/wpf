@@ -15,6 +15,7 @@ using System.Text;
 //
 
 #if HAS_UNO
+using System.Windows.Media;     // ImageSource.Width/Height extensions
 using Image = System.Windows.Controls.Image;
 #endif
 

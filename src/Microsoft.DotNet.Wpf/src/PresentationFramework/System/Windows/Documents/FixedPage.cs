@@ -47,7 +47,9 @@ namespace System.Windows.Documents
     // HAS_UNO: WinUI's FrameworkElement cannot host children, and UIElementCollection
     // cannot be constructed standalone. Derive from the WPF Panel shim (a WinUI Panel)
     // so Children/visual-children come from the real WinUI panel.
-    public sealed partial class FixedPage : System.Windows.Controls.Panel, IAddChildInternal, IFixedNavigate, IUriContext
+    // IInputElement added explicitly: WPF's FrameworkElement implements it natively;
+    // the WinUI Panel shim does not, but Hyperlink.RaiseNavigate(page, ...) needs it.
+    public sealed partial class FixedPage : System.Windows.Controls.Panel, IAddChildInternal, IFixedNavigate, IUriContext, System.Windows.Input.IInputElement
 #else
     public sealed class FixedPage : FrameworkElement, IAddChildInternal, IFixedNavigate, IUriContext
 #endif

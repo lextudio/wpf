@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 #region Using directives
@@ -56,7 +56,14 @@ namespace System.Windows.Documents
             {                       // Loose XAML, just check against schema, don't check content type
                 if (rootElement==null)
                 {
+#if HAS_UNO
+                    // HAS_UNO: our ParserContext shim does not derive from XmlParserContext
+                    // (real WPF's does), and the shim's XamlReader.Load ignores parserContext
+                    // anyway, so the reader is created without one.
+                    XmlReader reader = XmlReader.Create(stream);
+#else
                     XmlReader reader = XmlReader.Create(stream, null, pc);
+#endif
                     obj = XamlReader.Load(reader, pc, XamlParseMode.Synchronous, true, safeTypes);
                     stream.Close();
                 }

@@ -536,7 +536,12 @@ namespace System.Windows.Documents
                         else
                         {
                             _pendingStreams.Add(p, pageStream);
+#if HAS_UNO
+                            // HAS_UNO: FrameworkElement.Initialized has no WinUI counterpart; see FrameworkElementInitialized.
+                            System.Windows.FrameworkElementInitialized.Add(p, new EventHandler(_OnPaserFinished));
+#else
                             p.Initialized += new EventHandler(_OnPaserFinished);
+#endif
                         }
                     }
                 }

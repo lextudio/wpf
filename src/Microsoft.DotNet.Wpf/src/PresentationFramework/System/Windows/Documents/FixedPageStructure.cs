@@ -793,7 +793,7 @@ namespace System.Windows.Documents
             }
         }
 
-#if DEBUG && !HAS_UNO   // HAS_UNO: DrawDebugVisual rendering needs DrawingContext/FormattedText/GlyphRun, none of which WinUI exposes.
+#if DEBUG
         internal FixedTextBuilder FixedTextBuilder
         {
             get
@@ -888,7 +888,7 @@ namespace System.Windows.Documents
 
         //Determines whether a point is close enough to a line when determining snap to line
 
-#if DEBUG && !HAS_UNO   // HAS_UNO: DrawDebugVisual rendering needs DrawingContext/FormattedText/GlyphRun, none of which WinUI exposes.
+#if DEBUG
         private FixedTextBuilder _fixedTextBuilder;
         private FlowNode[] _flowNodes; //Flow nodes for this page
         private List<FixedNode> _fixedNodes;

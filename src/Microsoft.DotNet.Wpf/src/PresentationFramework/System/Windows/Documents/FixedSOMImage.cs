@@ -16,6 +16,7 @@ using System.Windows.Shapes;
 #if HAS_UNO
 using Image = System.Windows.Controls.Image;
 using Path = System.Windows.Shapes.Path;
+using ImageSource = Microsoft.UI.Xaml.Media.ImageSource;
 #endif
 
 namespace System.Windows.Documents

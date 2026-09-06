@@ -20,6 +20,11 @@ namespace MS.Internal.Markup
 using System.Windows;
 
 namespace System.Xaml
+#elif HAS_UNO
+// HAS_UNO: LeXtudio.Windows merges the WPF assemblies into one; SR lives in the root namespace.
+using System.Windows;
+
+namespace System.Windows.Markup
 #else
 using MS.Internal.WindowsBase;
 using System.Windows;

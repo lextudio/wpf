@@ -15,6 +15,7 @@ using System.Windows.Media;
 using Matrix = System.Windows.Media.Matrix;
 using Path = System.Windows.Shapes.Path;
 using Image = System.Windows.Controls.Image;
+using System.Windows.Markup;
 #endif
 
 namespace System.Windows.Documents
